@@ -1,0 +1,12 @@
+AlignAfterOpenBracket: Align
+UseTab: Always
+IndentWidth: 4
+TabWidth: 4
+IndentCaseLabels: true
+BreakBeforeBraces: Attach
+AllowShortFunctionsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: false
+PointerAlignment: Right
+SpacesBeforeTrailingComments: 2
+ColumnLimit: 100
+IncludeBlocks: Regroup
