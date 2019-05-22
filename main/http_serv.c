@@ -4,6 +4,8 @@
  */
 #include "http_serv.h"
 
+static const char *TAG = "http";
+
 httpd_handle_t start_httpserver() {
 	httpd_handle_t server = NULL;
 	httpd_config_t server_config = HTTPD_DEFAULT_CONFIG();
@@ -21,7 +23,7 @@ static esp_err_t index_get_handler(httpd_req_t *req) {
 	size_t buffer_len;
 
 	httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
-	httpd_resp_send(req, "Hello, world!", strlen("Hello, world!"));
+	httpd_resp_send(req, "Hello, world!\n", strlen("Hello, world!\n"));
 	return ESP_OK;
 }
 
@@ -30,6 +32,6 @@ static esp_err_t submit_post_handler(httpd_req_t *req) {
 	size_t buffer_len;
 
 	httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
-	httpd_resp_send(req, "Recieved!", strlen("Recieved!"));
+	httpd_resp_send(req, "Recieved!\n", strlen("Recieved!\n"));
 	return ESP_OK;
 }

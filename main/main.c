@@ -21,7 +21,7 @@ static EventGroupHandle_t s_wifi_event_group;
 
 const int WIFI_CONNECTED_BIT = 0x1;
 
-static const char *TAG = "wifi station";
+static const char *TAG = "main";
 
 static int s_retry_num = 0;
 
@@ -74,9 +74,14 @@ void wifi_init_sta() {
 }
 
 void app_main() {
-	app_init();
+	esp_err_t ret = app_init();
 
-	ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
+	if (ret != ESP_OK) {
+		ESP_LOGE(TAG, "Failure initializing.");
+		return;
+	}
+
+	ESP_LOGI(TAG, "Initialized.");
 	wifi_init_sta();
 	start_httpserver();
 }
