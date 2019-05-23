@@ -2,7 +2,13 @@
  *	Doorbell Reciever
  * 	5/21/2019
  */
+#include "esp_err.h"
+#include "esp_log.h"
+
 #include <esp_http_server.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/stat.h>
 
 httpd_handle_t start_httpserver();
 static esp_err_t index_get_handler(httpd_req_t *);
