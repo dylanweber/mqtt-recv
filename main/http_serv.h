@@ -15,6 +15,9 @@ static esp_err_t index_get_handler(httpd_req_t *);
 static esp_err_t submit_post_handler(httpd_req_t *);
 static esp_err_t favicon_get_handler(httpd_req_t *);
 
+char *urldecode(char *);
+void cleancpy(char *, char *, int);
+
 // clang-format off
 static const httpd_uri_t index_uri = {
 	.uri = "/",
