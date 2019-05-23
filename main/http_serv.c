@@ -13,6 +13,7 @@ httpd_handle_t start_httpserver() {
 	if (httpd_start(&server, &server_config) == ESP_OK) {
 		httpd_register_uri_handler(server, &index_uri);
 		httpd_register_uri_handler(server, &post_uri);
+		httpd_register_uri_handler(server, &favicon_uri);
 	}
 
 	return server;
@@ -39,6 +40,7 @@ static esp_err_t index_get_handler(httpd_req_t *req) {
 	fclose(fp);
 
 	httpd_resp_send(req, buffer, buffer_len);
+	free(buffer);
 	return ESP_OK;
 }
 
@@ -50,7 +52,7 @@ static esp_err_t submit_post_handler(httpd_req_t *req) {
 
 	FILE *fp = fopen("/spiffs/saved.html", "r");
 	if (fp == NULL) {
-		ESP_LOGE(TAG, "Failed to open index file.");
+		ESP_LOGE(TAG, "Failed to open post file.");
 		return ESP_FAIL;
 	}
 
@@ -63,5 +65,31 @@ static esp_err_t submit_post_handler(httpd_req_t *req) {
 	fclose(fp);
 
 	httpd_resp_send(req, buffer, buffer_len);
+	free(buffer);
+	return ESP_OK;
+}
+
+static esp_err_t favicon_get_handler(httpd_req_t *req) {
+	char *buffer;
+	size_t buffer_len;
+
+	httpd_resp_set_hdr(req, "Content-Type", "image/x-icon");
+
+	FILE *fp = fopen("/spiffs/favicon.ico", "r");
+	if (fp == NULL) {
+		ESP_LOGE(TAG, "Failed to open favicon file.");
+		return ESP_FAIL;
+	}
+
+	fseek(fp, 0, SEEK_END);
+	buffer_len = ftell(fp);
+	buffer = malloc(buffer_len * sizeof(*buffer));
+
+	fseek(fp, 0, SEEK_SET);
+	fread(buffer, 1, buffer_len, fp);
+	fclose(fp);
+
+	httpd_resp_send(req, buffer, buffer_len);
+	free(buffer);
 	return ESP_OK;
 }
