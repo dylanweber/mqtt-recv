@@ -1,8 +1,19 @@
-/*	Dylan Weber
- *	Doorbell Reciever
- * 	5/21/2019
- */
+/*
+	MQTT Reciever - main.c
+	Copyright 2019 Dylan Weber
 
+	Licensed under the Apache License, Version 2.0 (the "License");
+	you may not use this file except in compliance with the License.
+	You may obtain a copy of the License at
+
+		http://www.apache.org/licenses/LICENSE-2.0
+
+	Unless required by applicable law or agreed to in writing, software
+	distributed under the License is distributed on an "AS IS" BASIS,
+	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	See the License for the specific language governing permissions and
+	limitations under the License.
+ */
 #include "esp_event_loop.h"
 #include "esp_log.h"
 #include "esp_system.h"
@@ -32,7 +43,8 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
 			esp_wifi_connect();
 			break;
 		case SYSTEM_EVENT_STA_GOT_IP:
-			ESP_LOGI(TAG, "got ip:%s", ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
+			ESP_LOGI(TAG, "Recieved IP address:%s",
+					 ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
 			s_retry_num = 0;
 			xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
 			break;
@@ -41,9 +53,9 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
 				esp_wifi_connect();
 				xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
 				s_retry_num++;
-				ESP_LOGI(TAG, "retry to connect to the AP");
+				ESP_LOGI(TAG, "Retrying connection");
 			}
-			ESP_LOGI(TAG, "connect to the AP fail\n");
+			ESP_LOGI(TAG, "Connection failed\n");
 			break;
 		}
 		default:
@@ -68,8 +80,8 @@ void wifi_init_sta() {
 	esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config);
 	esp_wifi_start();
 
-	ESP_LOGI(TAG, "wifi_init_sta finished.");
-	ESP_LOGI(TAG, "connect to ap SSID:%s password:%s", CONFIG_ESP_WIFI_SSID,
+	ESP_LOGI(TAG, "WIFI init finished.");
+	ESP_LOGI(TAG, "Connected to AP SSID:%s password:%s", CONFIG_ESP_WIFI_SSID,
 			 CONFIG_ESP_WIFI_PASSWORD);
 }
 

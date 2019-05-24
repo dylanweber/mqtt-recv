@@ -1,6 +1,18 @@
-/*	Dylan Weber
- *	Doorbell Reciever
- * 	5/21/2019
+/*
+	MQTT Reciever - http_serv.c
+	Copyright 2019 Dylan Weber
+
+	Licensed under the Apache License, Version 2.0 (the "License");
+	you may not use this file except in compliance with the License.
+	You may obtain a copy of the License at
+
+		http://www.apache.org/licenses/LICENSE-2.0
+
+	Unless required by applicable law or agreed to in writing, software
+	distributed under the License is distributed on an "AS IS" BASIS,
+	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	See the License for the specific language governing permissions and
+	limitations under the License.
  */
 #include "http_serv.h"
 
@@ -21,7 +33,7 @@ httpd_handle_t start_httpserver() {
 	return server;
 }
 
-static esp_err_t index_get_handler(httpd_req_t *req) {
+esp_err_t index_get_handler(httpd_req_t *req) {
 	char *buffer;
 	size_t buffer_len;
 
@@ -46,7 +58,7 @@ static esp_err_t index_get_handler(httpd_req_t *req) {
 	return ESP_OK;
 }
 
-static esp_err_t submit_post_handler(httpd_req_t *req) {
+esp_err_t submit_post_handler(httpd_req_t *req) {
 	char *buffer;
 	size_t buffer_len;
 
@@ -110,7 +122,7 @@ static esp_err_t submit_post_handler(httpd_req_t *req) {
 	return ESP_OK;
 }
 
-static esp_err_t favicon_get_handler(httpd_req_t *req) {
+esp_err_t favicon_get_handler(httpd_req_t *req) {
 	char *buffer;
 	size_t buffer_len;
 

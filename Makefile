@@ -3,7 +3,7 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := doorbell-recv
+PROJECT_NAME := mqtt-recv
 
 include $(IDF_PATH)/make/project.mk
 
