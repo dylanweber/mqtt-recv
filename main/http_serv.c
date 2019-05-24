@@ -20,6 +20,8 @@
 
 static const char *TAG = "http";
 
+static TaskHandle_t restart_task = NULL;
+
 httpd_handle_t start_httpserver() {
 	httpd_handle_t server = NULL;
 	httpd_config_t server_config = HTTPD_DEFAULT_CONFIG();
@@ -31,6 +33,14 @@ httpd_handle_t start_httpserver() {
 	}
 
 	return server;
+}
+
+void stop_httpserver(httpd_handle_t server) {
+	if (restart_task != NULL) {
+		vTaskDelete(restart_task);
+	}
+
+	httpd_stop(server);
 }
 
 esp_err_t index_get_handler(httpd_req_t *req) {
@@ -50,7 +60,7 @@ esp_err_t index_get_handler(httpd_req_t *req) {
 	buffer = malloc(buffer_len * sizeof(*buffer));
 
 	fseek(fp, 0, SEEK_SET);
-	fread(buffer, 1, buffer_len, fp);
+	fread(buffer, buffer_len, 1, fp);
 	fclose(fp);
 
 	httpd_resp_send(req, buffer, buffer_len);
@@ -61,6 +71,8 @@ esp_err_t index_get_handler(httpd_req_t *req) {
 esp_err_t submit_post_handler(httpd_req_t *req) {
 	char *buffer;
 	size_t buffer_len;
+
+	// Decode POST data
 
 	char content[500];
 	memset(content, 0, sizeof(content));
@@ -96,7 +108,25 @@ esp_err_t submit_post_handler(httpd_req_t *req) {
 	ESP_LOGI(TAG, "SSID: %s", decoded_ssid);
 	ESP_LOGI(TAG, "Password: %s", decoded_pass);
 
-	// TODO: Save Wi-Fi information
+	// Save Wi-Fi information
+
+	FILE *save_fp = fopen("/spiffs/wifi.ssid", "w");
+	if (save_fp == NULL) {
+		ESP_LOGE(TAG, "Failed to open wifi ssid file.");
+		return ESP_FAIL;
+	}
+
+	fwrite(decoded_ssid, strlen(decoded_ssid), 1, save_fp);
+	fclose(save_fp);
+
+	save_fp = fopen("/spiffs/wifi.pass", "w");
+	if (save_fp == NULL) {
+		ESP_LOGE(TAG, "Failed to open wifi pass file.");
+		return ESP_FAIL;
+	}
+
+	fwrite(decoded_pass, strlen(decoded_pass), 1, save_fp);
+	fclose(save_fp);
 
 	free(decoded_ssid);
 	free(decoded_pass);
@@ -114,11 +144,14 @@ esp_err_t submit_post_handler(httpd_req_t *req) {
 	buffer = malloc(buffer_len * sizeof(*buffer));
 
 	fseek(fp, 0, SEEK_SET);
-	fread(buffer, 1, buffer_len, fp);
+	fread(buffer, buffer_len, 1, fp);
 	fclose(fp);
 
 	httpd_resp_send(req, buffer, buffer_len);
 	free(buffer);
+
+	xTaskCreate(delayed_restart, "restart", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY,
+				&restart_task);
 	return ESP_OK;
 }
 
@@ -139,12 +172,20 @@ esp_err_t favicon_get_handler(httpd_req_t *req) {
 	buffer = malloc(buffer_len * sizeof(*buffer));
 
 	fseek(fp, 0, SEEK_SET);
-	fread(buffer, 1, buffer_len, fp);
+	fread(buffer, buffer_len, 1, fp);
 	fclose(fp);
 
 	httpd_resp_send(req, buffer, buffer_len);
 	free(buffer);
 	return ESP_OK;
+}
+
+void delayed_restart(void *params) {
+	vTaskDelay(2500 / portTICK_PERIOD_MS);
+	esp_wifi_stop();
+	esp_wifi_deinit();
+	vTaskDelay(100 / portTICK_PERIOD_MS);
+	esp_restart();
 }
 
 char *urldecode(char *encoded_string) {
