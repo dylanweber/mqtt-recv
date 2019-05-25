@@ -86,14 +86,66 @@
 			background-color: #34CACA;
 		}
 	</style>
+	<script>
+		function conversionMapConstructor() {
+			var map = {};
+			map[0x2018] = '\'';
+			map[0x201B] = '\'';
+			map[0x201C] = '"';
+			map[0x201F] = '"';
+			map[0x2019] = '\'';
+			map[0x201D] = '"';
+			map[0x2032] = '\'';
+			map[0x2033] = '"';
+			map[0x2035] = '\'';
+			map[0x2036] = '"';
+			map[0x2014] = '-';
+			map[0x2013] = '-';
+			return map;
+		}
+
+		function changeChar(string, index, replacement) {
+			if (index > string.length - 1) return;
+			return string.substr(0, index) + replacement + string.substr(index + 1);
+		}
+
+		function preventSmartQuotes() {
+			var conversionMap = conversionMapConstructor();
+
+			var ssid_box = document.querySelector('input[type=text]');
+			var pass_box = document.querySelector('input[type=password]');
+
+			var ssid_string = ssid_box.value;
+			var pass_string = pass_box.value;
+
+			for (var i = 0; i < ssid_string.length; i++) {
+				var replacement = conversionMap[ssid_string[i].charCodeAt(0)];
+				if (replacement) {
+					ssid_string = changeChar(ssid_string, i, replacement);
+				}
+			}
+
+			for (var i = 0; i < pass_string.length; i++) {
+				var replacement = conversionMap[pass_string[i].charCodeAt(0)];
+				if (replacement) {
+					pass_string = changeChar(pass_string, i, replacement);
+				}
+			}
+
+			ssid_box.value = ssid_string;
+			pass_box.value = pass_string;
+
+			return true;
+		}
+	</script>
 </head>
 
 <body>
 	<div class="form-style-8">
 		<h2>Connect to your Wi-Fi</h2>
-		<form action="/submit" method="post">
-			<input type="text" name="ssid" maxlength=32 placeholder="SSID Name" />
-			<input type="password" name="pass" maxlength=70 placeholder="SSID Password" />
+		<form action="/submit" method="post" onsubmit="return preventSmartQuotes()" accept-charset="UTF-8">
+			<input type="text" spellcheck="false" name="ssid" maxlength=32 placeholder="SSID Name" />
+			<input type="password" spellcheck="false" name="pass" maxlength=70 placeholder="SSID Password" />
 			<input type="submit" value="Connect" />
 		</form>
 	</div>

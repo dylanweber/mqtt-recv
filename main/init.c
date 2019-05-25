@@ -52,7 +52,7 @@ esp_err_t app_init() {
 
 	char buf[64];
 	memset(buf, 0, sizeof(buf));
-	fread(buf, 1, sizeof(buf), fp);
+	fread(buf, 1, sizeof(buf) - 1, fp);
 	fclose(fp);
 
 	ESP_LOGI(TAG, "Read from example.txt: %s", buf);

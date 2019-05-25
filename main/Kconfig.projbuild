@@ -23,4 +23,8 @@ config DHCP_NAME
 	default "esp32"
 	help
 	Name sent to the router defining the hostname.
+
+config DELETE_ON_FAIL
+	bool "Delete Wi-Fi configuration once it fails?"
+
 endmenu

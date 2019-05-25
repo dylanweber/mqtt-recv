@@ -44,8 +44,10 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
 				s_retry_num++;
 				ESP_LOGI(TAG, "Retrying connection");
 			} else {
+#ifdef DELETE_ON_FAIL
 				remove("/spiffs/wifi.ssid");
 				remove("/spiffs/wifi.pass");
+#endif
 				esp_err_t ret = wifi_startap();
 				if (ret == ESP_OK)
 					start_httpserver();
@@ -72,9 +74,10 @@ esp_err_t wifi_restore() {
 	fseek(fp, 0, SEEK_END);
 	len = ftell(fp);
 
-	ssid = malloc(len * sizeof(*ssid));
+	ssid = malloc((len + 1) * sizeof(*ssid));
 	fseek(fp, 0, SEEK_SET);
 	fread(ssid, len, 1, fp);
+	ssid[len] = '\0';
 	fclose(fp);
 
 	fp = fopen("/spiffs/wifi.pass", "r");
@@ -86,9 +89,10 @@ esp_err_t wifi_restore() {
 	fseek(fp, 0, SEEK_END);
 	len = ftell(fp);
 
-	pass = malloc(len * sizeof(*pass));
+	pass = malloc((len + 1) * sizeof(*pass));
 	fseek(fp, 0, SEEK_SET);
 	fread(pass, len, 1, fp);
+	pass[len] = '\0';
 	fclose(fp);
 
 	wifi_connect(ssid, pass);
@@ -120,7 +124,8 @@ esp_err_t wifi_connect(char *ssid, char *pass) {
 	}
 
 	ESP_LOGI(TAG, "WIFI init finished.");
-	ESP_LOGI(TAG, "Connected to AP SSID: \"%s\" password:\"%s\"", ssid, pass);
+	ESP_LOGI(TAG, "Connected to AP SSID: \"%s\" password:\"%s\"", wifi_config.sta.ssid,
+			 wifi_config.sta.password);
 	return ESP_OK;
 }
 

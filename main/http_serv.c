@@ -57,7 +57,8 @@ esp_err_t index_get_handler(httpd_req_t *req) {
 
 	fseek(fp, 0, SEEK_END);
 	buffer_len = ftell(fp);
-	buffer = malloc(buffer_len * sizeof(*buffer));
+	buffer = malloc((buffer_len + 1) * sizeof(*buffer));
+	buffer[buffer_len] = '\0';
 
 	fseek(fp, 0, SEEK_SET);
 	fread(buffer, buffer_len, 1, fp);
@@ -141,7 +142,8 @@ esp_err_t submit_post_handler(httpd_req_t *req) {
 
 	fseek(fp, 0, SEEK_END);
 	buffer_len = ftell(fp);
-	buffer = malloc(buffer_len * sizeof(*buffer));
+	buffer = malloc((buffer_len + 1) * sizeof(*buffer));
+	buffer[buffer_len] = '\0';
 
 	fseek(fp, 0, SEEK_SET);
 	fread(buffer, buffer_len, 1, fp);
@@ -169,7 +171,8 @@ esp_err_t favicon_get_handler(httpd_req_t *req) {
 
 	fseek(fp, 0, SEEK_END);
 	buffer_len = ftell(fp);
-	buffer = malloc(buffer_len * sizeof(*buffer));
+	buffer = malloc((buffer_len + 1) * sizeof(*buffer));
+	buffer[buffer_len] = '\0';
 
 	fseek(fp, 0, SEEK_SET);
 	fread(buffer, buffer_len, 1, fp);
