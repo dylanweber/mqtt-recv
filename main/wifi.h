@@ -1,5 +1,5 @@
 /*
-	MQTT Reciever - init.h
+	MQTT Reciever - wifi.h
 	Copyright 2019 Dylan Weber
 
 	Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,18 +14,26 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
  */
-#ifndef INIT_H
-#define INIT_H
+#ifndef WIFI_H
+#define WIFI_H
 
 #include "esp_err.h"
+#include "esp_event_loop.h"
 #include "esp_log.h"
-#include "esp_spiffs.h"
-#include "nvs_flash.h"
+#include "esp_system.h"
+#include "esp_wifi.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/event_groups.h"
+#include "freertos/task.h"
+#include "http_serv.h"
+#include "lwip/err.h"
+#include "lwip/sys.h"
 
 #include <stdio.h>
 #include <string.h>
-#include <sys/stat.h>
 
-esp_err_t app_init();
+esp_err_t wifi_restore();
+esp_err_t wifi_connect(char *, char *);
+esp_err_t wifi_startap();
 
-#endif  // INIT_H
+#endif  // WIFI_H

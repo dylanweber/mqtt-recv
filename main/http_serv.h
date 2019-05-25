@@ -14,6 +14,9 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
  */
+#ifndef HTTP_SERV_H
+#define HTTP_SERV_H
+
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_system.h"
@@ -55,3 +58,5 @@ static const httpd_uri_t favicon_uri = {
 	.handler = favicon_get_handler,
 	.user_ctx = NULL
 };
+
+#endif // HTTP_SERV_H
