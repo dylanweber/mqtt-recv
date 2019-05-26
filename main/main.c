@@ -34,9 +34,16 @@ void app_main() {
 	ESP_LOGI(TAG, "Initialized.");
 	esp_err_t conn_ret = wifi_restore();
 	if (conn_ret != ESP_OK) {
-		esp_err_t ret = wifi_startap();
-		if (ret == ESP_OK)
-			start_httpserver();
+		char **network_list;
+		esp_err_t ret = wifi_scan(&network_list);
+		if (ret != ESP_OK) {
+			ESP_LOGE(TAG, "Failed to scan Wi-Fi.");
+			return;
+		}
+		ret = wifi_startap();
+		if (ret == ESP_OK) {
+			start_httpserver(network_list);
+		}
 	} else {
 		// start_mqtt();
 	}
