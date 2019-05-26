@@ -72,7 +72,7 @@ esp_err_t index_get_handler(httpd_req_t *req) {
 	char *template_str = strstr(buffer, "{%TEMPLATE}");
 	char **network_list = httpd_get_global_user_ctx(req->handle);
 
-	if (template_str == NULL && network_list != NULL) {
+	if (template_str == NULL || network_list == NULL) {
 		httpd_resp_send(req, buffer, buffer_len);
 		free(buffer);
 	} else {
