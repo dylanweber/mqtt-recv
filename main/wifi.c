@@ -178,20 +178,22 @@ esp_err_t wifi_scan(char ***network_list) {
 
 	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
 	esp_wifi_init(&cfg);
-	wifi_config_t wifi_config = {
-		.sta = {.scan_method = WIFI_ALL_CHANNEL_SCAN, .sort_method = WIFI_CONNECT_AP_BY_SIGNAL}};
-
-	esp_wifi_set_mode(WIFI_MODE_STA);
-	esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config);
+	esp_wifi_start();
 
 	wifi_scan_config_t scan_config = {.scan_type = WIFI_SCAN_TYPE_ACTIVE,
 									  .scan_time = {.active = {.min = 100, .max = 100}}};
 
-	esp_wifi_scan_start(&scan_config, true);
+	esp_err_t ret = esp_wifi_scan_start(&scan_config, true);
+	if (ret != ESP_OK) {
+		ESP_LOGE(TAG, "Cannot start scan.");
+		return ESP_FAIL;
+	}
+	esp_wifi_scan_stop();
 
 	uint16_t num_ap = 0;
-	esp_err_t ret = esp_wifi_scan_get_ap_num(&num_ap);
+	ret = esp_wifi_scan_get_ap_num(&num_ap);
 	if (ret != ESP_OK) {
+		ESP_LOGE(TAG, "Cannot get AP number.");
 		return ESP_FAIL;
 	}
 	char **name_list = NULL;
