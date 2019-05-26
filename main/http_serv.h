@@ -21,13 +21,14 @@
 #include "esp_log.h"
 #include "esp_system.h"
 #include "esp_wifi.h"
+#include "wifi.h"
 
 #include <esp_http_server.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 
-httpd_handle_t start_httpserver();
+httpd_handle_t start_httpserver(char **);
 void stop_httpserver(httpd_handle_t);
 esp_err_t index_get_handler(httpd_req_t *);
 esp_err_t submit_post_handler(httpd_req_t *);

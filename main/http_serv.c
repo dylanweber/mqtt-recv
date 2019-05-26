@@ -22,9 +22,12 @@ static const char *TAG = "http";
 
 static TaskHandle_t restart_task = NULL;
 
-httpd_handle_t start_httpserver() {
+httpd_handle_t start_httpserver(char **network_list) {
 	httpd_handle_t server = NULL;
 	httpd_config_t server_config = HTTPD_DEFAULT_CONFIG();
+
+	server_config.global_user_ctx = (void *)network_list;
+	server_config.global_user_ctx_free_fn = free_scan;
 
 	if (httpd_start(&server, &server_config) == ESP_OK) {
 		httpd_register_uri_handler(server, &index_uri);
@@ -64,8 +67,29 @@ esp_err_t index_get_handler(httpd_req_t *req) {
 	fread(buffer, buffer_len, 1, fp);
 	fclose(fp);
 
-	httpd_resp_send(req, buffer, buffer_len);
-	free(buffer);
+	// use template to generate wifi scan autocomplete
+
+	char *template_str = strstr(buffer, "{%TEMPLATE}");
+	char **network_list = httpd_get_global_user_ctx(req->handle);
+
+	if (template_str == NULL && network_list != NULL) {
+		httpd_resp_send(req, buffer, buffer_len);
+		free(buffer);
+	} else {
+		httpd_resp_send_chunk(req, buffer, (template_str - buffer));
+		char option_buffer[50] = {0};
+		int i;
+		for (i = 0; network_list[i] != NULL; i++) {
+			char *network_name = network_list[i];
+			strcpy(option_buffer, "<option>");
+			strcpy(option_buffer + sizeof("<option>"), network_list[i]);
+			strcpy(option_buffer + sizeof("<option>") + strlen(network_list[i]), "</option>");
+			httpd_resp_send_chunk(req, option_buffer, strlen(option_buffer));
+		}
+		httpd_resp_send_chunk(req, template_str + strlen(template_str),
+							  sizeof(template_str) + strlen(template_str));
+		httpd_resp_send_chunk(req, NULL, 0);
+	}
 	return ESP_OK;
 }
 
