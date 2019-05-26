@@ -80,14 +80,13 @@ esp_err_t index_get_handler(httpd_req_t *req) {
 		char option_buffer[50] = {0};
 		int i;
 		for (i = 0; network_list[i] != NULL; i++) {
-			char *network_name = network_list[i];
 			strcpy(option_buffer, "<option>");
-			strcpy(option_buffer + sizeof("<option>"), network_list[i]);
-			strcpy(option_buffer + sizeof("<option>") + strlen(network_list[i]), "</option>");
+			strcpy(option_buffer + strlen("<option>"), network_list[i]);
+			strcpy(option_buffer + strlen("<option>") + strlen(network_list[i]), "</option>");
 			httpd_resp_send_chunk(req, option_buffer, strlen(option_buffer));
 		}
-		httpd_resp_send_chunk(req, template_str + strlen(template_str),
-							  sizeof(template_str) + strlen(template_str));
+		httpd_resp_send_chunk(req, template_str + strlen("{%TEMPLATE}"),
+							  strlen(template_str) - strlen("{%TEMPLATE}"));
 		httpd_resp_send_chunk(req, NULL, 0);
 	}
 	return ESP_OK;
