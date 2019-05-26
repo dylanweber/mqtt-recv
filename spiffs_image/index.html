@@ -21,6 +21,16 @@
 
 		}
 
+		.other {
+			font-family: 'Open Sans Condensed', sans-serif;
+			margin: auto;
+			width: min-content;
+		}
+
+		.other a {
+			white-space: nowrap;
+		}
+
 		.form-style-8 h2 {
 			background: #4D4D4D;
 			text-transform: uppercase;
@@ -32,6 +42,7 @@
 			margin: -30px -30px 30px -30px;
 		}
 
+		.form-style-8 input[list="network"],
 		.form-style-8 input[type="text"],
 		.form-style-8 input[type="date"],
 		.form-style-8 input[type="datetime"],
@@ -144,10 +155,17 @@
 	<div class="form-style-8">
 		<h2>Connect to your Wi-Fi</h2>
 		<form action="/submit" method="post" onsubmit="return preventSmartQuotes()" accept-charset="UTF-8">
-			<input type="text" spellcheck="false" name="ssid" maxlength=32 placeholder="SSID Name" />
+			<input list="network" spellcheck="false" autocomplete="off" name="ssid" maxlength=32
+				placeholder="SSID Name" />
+			<datalist id="network">
+				{%TEMPLATE}
+			</datalist>
 			<input type="password" spellcheck="false" name="pass" maxlength=70 placeholder="SSID Password" />
 			<input type="submit" value="Connect" />
 		</form>
+	</div>
+	<div class="other">
+		<a class="other" href="/advanced.html">Advanced setup</a>
 	</div>
 </body>
 
