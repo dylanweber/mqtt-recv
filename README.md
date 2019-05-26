@@ -2,9 +2,9 @@
 This is an open source project aimed at creating a customizable MQTT firmware for the ESP32 with a captive portal Wi-Fi configuration interface for setup.
 
 # Building
-Requires a functioning [ESP-IDF](https://github.com/espressif/esp-idf) v3.2 environment for building and flashing the firmware. To flash the SPIFFS, please download the `spiffsgen.py` script from ESP-IDF's master branch [here](https://github.com/espressif/esp-idf/blob/master/components/spiffs/spiffsgen.py) and place it into the appropriate folder of your `$IDF_PATH`.
+Requires a functioning [ESP-IDF](https://github.com/espressif/esp-idf) v3.2 environment for building and flashing the firmware. To flash the SPIFFS, please download the `spiffsgen.py` script from ESP-IDF's master branch [here](https://github.com/espressif/esp-idf/blob/master/components/spiffs/spiffsgen.py) and place it into the appropriate folder of your `$IDF_PATH`. In `menuconfig`, select the option to specify a custom partition table in order to store the SPIFFS after the firmware partition.
 
-	make flash && ./flash_spiffs.sh
+	make menuconfig && make flash && ./flash_spiffs.sh
 
 # License
 © 2019 Dylan Weber
