@@ -48,9 +48,16 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
 				remove("/spiffs/wifi.ssid");
 				remove("/spiffs/wifi.pass");
 #endif
-				esp_err_t ret = wifi_startap();
-				if (ret == ESP_OK)
-					start_httpserver();
+				char **network_list;
+				esp_err_t ret = wifi_scan(&network_list);
+				if (ret != ESP_OK) {
+					ESP_LOGE(TAG, "Failed to scan Wi-Fi.");
+					return ESP_FAIL;
+				}
+				ret = wifi_startap();
+				if (ret == ESP_OK) {
+					start_httpserver(network_list);
+				}
 			}
 			break;
 		}
@@ -164,4 +171,37 @@ esp_err_t wifi_startap() {
 	}
 
 	return ESP_OK;
+}
+
+esp_err_t wifi_scan(char ***network_list) {
+	tcpip_adapter_init();
+
+	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+	esp_wifi_init(&cfg);
+	wifi_config_t wifi_config = {
+		.sta = {.scan_method = WIFI_ALL_CHANNEL_SCAN, .sort_method = WIFI_CONNECT_AP_BY_SIGNAL}};
+
+	esp_wifi_set_mode(WIFI_MODE_STA);
+	esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config);
+
+	wifi_scan_config_t scan_config = {.scan_type = WIFI_SCAN_TYPE_ACTIVE,
+									  .scan_time = {.active = {.min = 100, .max = 100}}};
+
+	esp_wifi_scan_start(&scan_config, true);
+
+	uint16_t num_ap = 0;
+	esp_err_t ret = esp_wifi_scan_get_ap_num(&num_ap);
+	if (ret != ESP_OK) {
+		return ESP_FAIL;
+	}
+	char **name_list = NULL;
+
+	ESP_LOGI(TAG, "There are %d APs found.", num_ap);
+
+	*network_list = name_list;
+	return ESP_OK;
+}
+
+void free_scan(void *data) {
+	char **network_list = (char **)data;
 }
