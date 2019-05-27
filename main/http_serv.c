@@ -31,6 +31,7 @@ httpd_handle_t start_httpserver(char **network_list) {
 
 	if (httpd_start(&server, &server_config) == ESP_OK) {
 		httpd_register_uri_handler(server, &index_uri);
+		httpd_register_uri_handler(server, &adv_uri);
 		httpd_register_uri_handler(server, &post_uri);
 		httpd_register_uri_handler(server, &favicon_uri);
 	}
@@ -92,6 +93,33 @@ esp_err_t index_get_handler(httpd_req_t *req) {
 							  strlen(template_str) - strlen(template));
 		httpd_resp_send_chunk(req, NULL, 0);
 	}
+	free(buffer);
+	return ESP_OK;
+}
+
+esp_err_t advanced_get_handler(httpd_req_t *req) {
+	char *buffer;
+	size_t buffer_len;
+
+	httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
+
+	FILE *fp = fopen("/spiffs/advanced.html", "r");
+	if (fp == NULL) {
+		ESP_LOGE(TAG, "Failed to open advanced.html file.");
+		return ESP_FAIL;
+	}
+
+	fseek(fp, 0, SEEK_END);
+	buffer_len = ftell(fp);
+	buffer = malloc((buffer_len + 1) * sizeof(*buffer));
+	buffer[buffer_len] = '\0';
+
+	fseek(fp, 0, SEEK_SET);
+	fread(buffer, buffer_len, 1, fp);
+	fclose(fp);
+
+	httpd_resp_send(req, buffer, buffer_len);
+
 	free(buffer);
 	return ESP_OK;
 }

@@ -31,6 +31,7 @@
 httpd_handle_t start_httpserver(char **);
 void stop_httpserver(httpd_handle_t);
 esp_err_t index_get_handler(httpd_req_t *);
+esp_err_t advanced_get_handler(httpd_req_t *);
 esp_err_t submit_post_handler(httpd_req_t *);
 esp_err_t favicon_get_handler(httpd_req_t *);
 
@@ -43,6 +44,13 @@ static const httpd_uri_t index_uri = {
 	.uri = "/",
 	.method = HTTP_GET,
 	.handler = index_get_handler,
+	.user_ctx = NULL
+};
+
+static const httpd_uri_t adv_uri = {
+	.uri = "/advanced.html",
+	.method = HTTP_GET,
+	.handler = advanced_get_handler,
 	.user_ctx = NULL
 };
 
