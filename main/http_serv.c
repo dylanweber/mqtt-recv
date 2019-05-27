@@ -74,7 +74,6 @@ esp_err_t index_get_handler(httpd_req_t *req) {
 
 	if (template_str == NULL || network_list == NULL) {
 		httpd_resp_send(req, buffer, buffer_len);
-		free(buffer);
 	} else {
 		httpd_resp_send_chunk(req, buffer, (template_str - buffer));
 		char option_buffer[50] = {0};
@@ -89,6 +88,7 @@ esp_err_t index_get_handler(httpd_req_t *req) {
 							  strlen(template_str) - strlen("{%TEMPLATE}"));
 		httpd_resp_send_chunk(req, NULL, 0);
 	}
+	free(buffer);
 	return ESP_OK;
 }
 
