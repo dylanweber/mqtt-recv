@@ -69,7 +69,11 @@ esp_err_t index_get_handler(httpd_req_t *req) {
 
 	// use template to generate wifi scan autocomplete
 
-	char *template_str = strstr(buffer, "{%TEMPLATE}");
+	const char *template = "{%TEMPLATE}";
+	const char *begin_format = "\t\t\t\t<option>";
+	const char *end_format = "</option>\n";
+
+	char *template_str = strstr(buffer, template);
 	char **network_list = httpd_get_global_user_ctx(req->handle);
 
 	if (template_str == NULL || network_list == NULL) {
@@ -79,13 +83,13 @@ esp_err_t index_get_handler(httpd_req_t *req) {
 		char option_buffer[50] = {0};
 		int i;
 		for (i = 0; network_list[i] != NULL; i++) {
-			strcpy(option_buffer, "<option>");
-			strcpy(option_buffer + strlen("<option>"), network_list[i]);
-			strcpy(option_buffer + strlen("<option>") + strlen(network_list[i]), "</option>");
+			strcpy(option_buffer, begin_format);
+			strcpy(option_buffer + strlen(begin_format), network_list[i]);
+			strcpy(option_buffer + strlen(begin_format) + strlen(network_list[i]), end_format);
 			httpd_resp_send_chunk(req, option_buffer, strlen(option_buffer));
 		}
-		httpd_resp_send_chunk(req, template_str + strlen("{%TEMPLATE}"),
-							  strlen(template_str) - strlen("{%TEMPLATE}"));
+		httpd_resp_send_chunk(req, template_str + strlen(template),
+							  strlen(template_str) - strlen(template));
 		httpd_resp_send_chunk(req, NULL, 0);
 	}
 	free(buffer);
