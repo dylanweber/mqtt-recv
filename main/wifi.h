@@ -33,7 +33,7 @@
 #include <string.h>
 
 esp_err_t wifi_restore();
-esp_err_t wifi_connect(char *, char *);
+esp_err_t wifi_connect(char *, char *, uint8_t *);
 esp_err_t wifi_startap();
 esp_err_t wifi_scan(char ***);
 void free_scan(void *);

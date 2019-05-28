@@ -158,11 +158,28 @@ esp_err_t submit_post_handler(httpd_req_t *req) {
 		return ESP_FAIL;
 	}
 
+	char bssid[31];
+	memset(bssid, 0, sizeof(bssid));
+	err_ret = httpd_query_key_value(content, "bssid", bssid, 31);
+	if (err_ret == ESP_ERR_NOT_FOUND) {
+
+	} else if (err_ret != ESP_OK) {
+		httpd_resp_send_500(req);
+		return ESP_FAIL;
+	}
+
 	char *decoded_ssid = urldecode(ssid);
 	char *decoded_pass = urldecode(pass);
+	char *decoded_bssid = NULL;
+	if (strlen(bssid) != 0) {
+		decoded_bssid = urldecode(bssid);
+	}
 
 	ESP_LOGI(TAG, "SSID: %s", decoded_ssid);
 	ESP_LOGI(TAG, "Password: %s", decoded_pass);
+	if (decoded_bssid != NULL) {
+		ESP_LOGI(TAG, "BSSID: %s", decoded_bssid);
+	}
 
 	// Save Wi-Fi information
 
@@ -184,8 +201,34 @@ esp_err_t submit_post_handler(httpd_req_t *req) {
 	fwrite(decoded_pass, strlen(decoded_pass), 1, save_fp);
 	fclose(save_fp);
 
+	if (decoded_bssid != NULL) {
+		uint8_t bssid_mac[6];
+		int values[6];
+		int i;
+
+		if (sscanf(decoded_bssid, "%x:%x:%x:%x:%x:%x%*c", &values[0], &values[1], &values[2],
+				   &values[3], &values[4], &values[5]) == 6) {
+			for (i = 0; i < 6; i++) {
+				bssid_mac[i] = (uint8_t)values[i];
+			}
+		} else {
+			return ESP_FAIL;
+		}
+		save_fp = fopen("/spiffs/wifi.bssid", "w");
+		if (save_fp == NULL) {
+			ESP_LOGE(TAG, "Failed to open wifi bssid file.");
+			return ESP_FAIL;
+		}
+
+		fwrite(bssid_mac, 6, 1, save_fp);
+		fclose(save_fp);
+	}
+
 	free(decoded_ssid);
 	free(decoded_pass);
+
+	if (decoded_bssid != NULL)
+		free(decoded_bssid);
 
 	httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
 

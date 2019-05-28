@@ -47,12 +47,12 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
 #ifdef DELETE_ON_FAIL
 				remove("/spiffs/wifi.ssid");
 				remove("/spiffs/wifi.pass");
+				remove("/spiffs/wifi.bssid");
 #endif
 				char **network_list;
 				esp_err_t ret = wifi_scan(&network_list);
 				if (ret != ESP_OK) {
 					ESP_LOGE(TAG, "Failed to scan Wi-Fi.");
-					return ESP_FAIL;
 				}
 				ret = wifi_startap();
 				if (ret == ESP_OK) {
@@ -102,14 +102,27 @@ esp_err_t wifi_restore() {
 	pass[len] = '\0';
 	fclose(fp);
 
-	wifi_connect(ssid, pass);
+	uint8_t bssid[6];
+	fp = fopen("/spiffs/wifi.bssid", "r");
+	if (fp == NULL) {
+		ESP_LOGI(TAG, "BSSID file not found.");
+		wifi_connect(ssid, pass, NULL);
+	} else {
+		fseek(fp, 0, SEEK_SET);
+		fread(bssid, 6, 1, fp);
+		fclose(fp);
+
+		ESP_LOGI(TAG, "BSSID is: %x:%x:%x:%x:%x:%x", bssid[0], bssid[1], bssid[2], bssid[3],
+				 bssid[4], bssid[5]);
+		wifi_connect(ssid, pass, bssid);
+	}
 
 	free(ssid);
 	free(pass);
 	return ESP_OK;
 }
 
-esp_err_t wifi_connect(char *ssid, char *pass) {
+esp_err_t wifi_connect(char *ssid, char *pass, uint8_t *bssid) {
 	s_wifi_event_group = xEventGroupCreate();
 
 	tcpip_adapter_init();
@@ -117,10 +130,17 @@ esp_err_t wifi_connect(char *ssid, char *pass) {
 
 	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
 	esp_wifi_init(&cfg);
+
 	wifi_config_t wifi_config = {.sta = {.ssid = {0}, .password = {0}}};
 
 	strncpy((char *)wifi_config.sta.ssid, ssid, 32);
 	strncpy((char *)wifi_config.sta.password, pass, 64);
+
+	if (bssid != NULL) {
+		ESP_LOGI(TAG, "Attempting to connect using BSSID...");
+		wifi_config.sta.bssid_set = true;
+		memcpy(wifi_config.sta.bssid, bssid, 6);
+	}
 
 	esp_wifi_set_storage(WIFI_STORAGE_RAM);
 	esp_wifi_set_mode(WIFI_MODE_STA);
