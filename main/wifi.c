@@ -50,7 +50,8 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
 				xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT_4);
 				xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT_6);
 				s_retry_num++;
-				ESP_LOGI(TAG, "Retrying connection");
+				vTaskDelay(4000 / portTICK_PERIOD_MS);
+				ESP_LOGI(TAG, "Retrying connection...");
 			} else {
 #ifdef DELETE_ON_FAIL
 				remove("/spiffs/wifi.ssid");
@@ -160,7 +161,7 @@ esp_err_t wifi_connect(char *ssid, char *pass, uint8_t *bssid) {
 	}
 
 	ESP_LOGI(TAG, "WIFI init finished.");
-	ESP_LOGI(TAG, "Connected to AP SSID: \"%s\" password:\"%s\"", wifi_config.sta.ssid,
+	ESP_LOGI(TAG, "Connecting to AP SSID: \"%s\" password:\"%s\"", wifi_config.sta.ssid,
 			 wifi_config.sta.password);
 	return ESP_OK;
 }
