@@ -20,7 +20,8 @@ static const char *TAG = "wifi";
 
 static EventGroupHandle_t s_wifi_event_group;
 
-const int WIFI_CONNECTED_BIT = 0x1;
+const int WIFI_CONNECTED_BIT_4 = BIT0;
+const int WIFI_CONNECTED_BIT_6 = BIT1;
 
 static int s_retry_num = 0;
 
@@ -34,13 +35,20 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
 			ESP_LOGI(TAG, "Recieved IP address:%s",
 					 ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
 			s_retry_num = 0;
-			xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+			xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT_4);
+			break;
+		case SYSTEM_EVENT_AP_STA_GOT_IP6:
+			xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT_6);
+			break;
+		case SYSTEM_EVENT_STA_CONNECTED:
+			tcpip_adapter_create_ip6_linklocal(TCPIP_ADAPTER_IF_STA);
 			break;
 		case SYSTEM_EVENT_STA_DISCONNECTED: {
 			ESP_LOGI(TAG, "Connection failed\n");
 			if (s_retry_num < CONFIG_ESP_MAXIMUM_RETRY) {
 				esp_wifi_connect();
-				xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+				xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT_4);
+				xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT_6);
 				s_retry_num++;
 				ESP_LOGI(TAG, "Retrying connection");
 			} else {
