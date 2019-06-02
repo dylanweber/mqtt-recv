@@ -1,5 +1,5 @@
 /*
-	MQTT Reciever - init.h
+	MQTT Reciever - interrupt.c
 	Copyright 2019 Dylan Weber
 
 	Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,30 +14,26 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
  */
-#ifndef INIT_H
-#define INIT_H
-
-#define BUTTON0 (1ULL << GPIO_NUM_4)
-#define ALLOC_FLAGS 0
-
-#include "driver/gpio.h"
-#include "esp_err.h"
-#include "esp_log.h"
-#include "esp_spiffs.h"
-#include "esp_system.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/queue.h"
-#include "freertos/task.h"
 #include "interrupt.h"
-#include "nvs_flash.h"
 
-#include <stdio.h>
-#include <string.h>
-#include <sys/stat.h>
+static const char *TAG = "int";
 
-esp_err_t app_init();
-void configure_clear_interrupt();
+void IRAM_ATTR gpio_isr_handler(void *params) {
+	uint32_t gpio_num = (uint32_t)params;
+	ets_printf("Test\n");
+	xQueueSendFromISR(gpio_event_queue, &gpio_num, NULL);
+}
 
-QueueHandle_t gpio_event_queue;
-
-#endif  // INIT_H
+void gpio_event_task(void *params) {
+	uint32_t gpio_num;
+	static int counter;
+	while (true) {
+		if (xQueueReceive(gpio_event_queue, &gpio_num, portMAX_DELAY)) {
+			vTaskDelay(5000 / portTICK_PERIOD_MS);
+			printf("info: %d, %x, %d\n", (int)gpio_event_queue, (int)gpio_num, counter);
+			counter++;
+		} else {
+			printf("No interrupt.\n");
+		}
+	}
+}

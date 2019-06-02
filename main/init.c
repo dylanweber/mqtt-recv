@@ -59,3 +59,20 @@ esp_err_t app_init() {
 
 	return ESP_OK;
 }
+
+void configure_clear_interrupt() {
+	gpio_config_t io_config;
+	io_config.intr_type = GPIO_INTR_ANYEDGE;
+	io_config.mode = GPIO_MODE_INPUT;
+	io_config.pull_up_en = GPIO_PULLUP_DISABLE;
+	io_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
+	io_config.pin_bit_mask = BUTTON0;
+
+	gpio_config(&io_config);
+
+	gpio_event_queue = xQueueCreate(10, sizeof(uint32_t));
+	xTaskCreate(gpio_event_task, "gpio_event_task", 2048, NULL, 1, NULL);
+
+	gpio_install_isr_service(ALLOC_FLAGS);
+	gpio_isr_handler_add(4, gpio_isr_handler, (void *)BUTTON0);
+}

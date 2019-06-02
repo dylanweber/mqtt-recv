@@ -47,4 +47,6 @@ void app_main() {
 	} else {
 		// start_mqtt();
 	}
+	configure_clear_interrupt();
+	ESP_LOGI(TAG, "Finished startup.");
 }
