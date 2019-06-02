@@ -17,7 +17,8 @@
 #ifndef INIT_H
 #define INIT_H
 
-#define BUTTON0 (1ULL << GPIO_NUM_4)
+#define BUTTON_NUM GPIO_NUM_4
+#define BUTTON_MSK (1ULL << BUTTON_NUM)
 #define ALLOC_FLAGS 0
 
 #include "driver/gpio.h"

@@ -20,20 +20,18 @@ static const char *TAG = "int";
 
 void IRAM_ATTR gpio_isr_handler(void *params) {
 	uint32_t gpio_num = (uint32_t)params;
-	ets_printf("Test\n");
 	xQueueSendFromISR(gpio_event_queue, &gpio_num, NULL);
 }
 
 void gpio_event_task(void *params) {
 	uint32_t gpio_num;
-	static int counter;
 	while (true) {
 		if (xQueueReceive(gpio_event_queue, &gpio_num, portMAX_DELAY)) {
-			vTaskDelay(5000 / portTICK_PERIOD_MS);
-			printf("info: %d, %x, %d\n", (int)gpio_event_queue, (int)gpio_num, counter);
-			counter++;
+			if (gpio_num == BUTTON_NUM) {
+				ESP_LOGI(TAG, "Button pressed.");
+			}
 		} else {
-			printf("No interrupt.\n");
+			ESP_LOGI(TAG, "No interrupt.");
 		}
 	}
 }

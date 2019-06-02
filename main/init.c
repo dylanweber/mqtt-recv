@@ -66,7 +66,7 @@ void configure_clear_interrupt() {
 	io_config.mode = GPIO_MODE_INPUT;
 	io_config.pull_up_en = GPIO_PULLUP_DISABLE;
 	io_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
-	io_config.pin_bit_mask = BUTTON0;
+	io_config.pin_bit_mask = BUTTON_MSK;
 
 	gpio_config(&io_config);
 
@@ -74,5 +74,5 @@ void configure_clear_interrupt() {
 	xTaskCreate(gpio_event_task, "gpio_event_task", 2048, NULL, 1, NULL);
 
 	gpio_install_isr_service(ALLOC_FLAGS);
-	gpio_isr_handler_add(4, gpio_isr_handler, (void *)BUTTON0);
+	gpio_isr_handler_add(BUTTON_NUM, gpio_isr_handler, (void *)BUTTON_NUM);
 }
