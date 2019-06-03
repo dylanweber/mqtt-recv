@@ -32,13 +32,38 @@
 #include <stdio.h>
 #include <string.h>
 
+/** Restores saved connections, returns ESP_OK if successfully finished or ESP_FAIL otherwise.
+ */
 esp_err_t wifi_restore();
+
+/** Connects to the given wireless network, returns ESP_OK if successful finished or ESP_FAIL
+ * otherwise.
+ *
+ *  Params:
+ *  SSID - 32 character buffer
+ *  Password - 64 character buffer
+ *  BSSID - 6 byte buffer to address of AP (optional)
+ */
 esp_err_t wifi_connect(char *, char *, uint8_t *);
+
+/** Disconnects from current wireless network, clears retry number.
+ */
 esp_err_t wifi_disconnect();
+
+/// Starts access point, clears retry number.
 esp_err_t wifi_startap();
+
+/** Scans for nearby access points, returns ESP_OK if successful or ESP_FAIL if not.
+ *
+ * Params:
+ * Network list - pointer of a char** to store the network list
+ */
 esp_err_t wifi_scan(char ***);
+
+/// Frees the network list returned from wifi_scan(char ***).
 void free_scan(void *);
 
+/// Number of connection attmpts to a wifi network, -1 if not attempting or broadcasting AP.
 int s_retry_num;
 
 #endif  // WIFI_H

@@ -28,15 +28,34 @@
 #include <string.h>
 #include <sys/stat.h>
 
+/** Starts HTTP server for network setup.
+ *
+ * Params:
+ * Network list - a list of network names from wifi_scan(char ***)
+ */
 httpd_handle_t start_httpserver(char **);
+
+/** Stops the HTTP server for network setup.
+ *
+ * Params:
+ * HTTPd handle - handle of server returned from start_httpserver(char **)
+ */
 void stop_httpserver(httpd_handle_t);
+
+/// Handler to render the index.html page
 esp_err_t index_get_handler(httpd_req_t *);
+/// Handler to render the advanced.html page
 esp_err_t advanced_get_handler(httpd_req_t *);
+/// Handler to recieve POST data and save the WiFi information
 esp_err_t submit_post_handler(httpd_req_t *);
+/// Handler to send the favicon file
 esp_err_t favicon_get_handler(httpd_req_t *);
 
+/// Delayed restart caused by network setup
 void delayed_restart(void *);
+/// Decodes URL-encoded strings
 char *urldecode(char *);
+/// String copy function with forced NULL termination
 void cleancpy(char *, char *, int);
 
 // clang-format off

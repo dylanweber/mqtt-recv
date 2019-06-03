@@ -37,9 +37,12 @@
 #include <string.h>
 #include <sys/stat.h>
 
+/// Initializes vital ESP32 functions
 esp_err_t app_init();
+/// Configures the clear button interrupt on GPIO4
 void configure_clear_interrupt();
 
+/// GPIO event queue used for storing GPIO interrupt information
 QueueHandle_t gpio_event_queue;
 
 #endif  // INIT_H

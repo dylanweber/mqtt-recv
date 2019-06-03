@@ -24,7 +24,9 @@
 #include "init.h"
 #include "wifi.h"
 
+/// GPIO event handler that stores information in the GPIO event queue
 void IRAM_ATTR gpio_isr_handler(void *);
+/// GPIO event task that waits for queue events and handles them
 void gpio_event_task(void *);
 
 #endif  // INTERRUPT_H
