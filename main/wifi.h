@@ -34,8 +34,11 @@
 
 esp_err_t wifi_restore();
 esp_err_t wifi_connect(char *, char *, uint8_t *);
+esp_err_t wifi_disconnect();
 esp_err_t wifi_startap();
 esp_err_t wifi_scan(char ***);
 void free_scan(void *);
+
+int s_retry_num;
 
 #endif  // WIFI_H

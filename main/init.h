@@ -26,6 +26,7 @@
 #include "esp_log.h"
 #include "esp_spiffs.h"
 #include "esp_system.h"
+#include "esp_wifi.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "freertos/task.h"

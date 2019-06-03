@@ -57,6 +57,8 @@ esp_err_t app_init() {
 
 	ESP_LOGI(TAG, "Read from example.txt: %s", buf);
 
+	tcpip_adapter_init();
+
 	return ESP_OK;
 }
 
@@ -71,7 +73,7 @@ void configure_clear_interrupt() {
 	gpio_config(&io_config);
 
 	gpio_event_queue = xQueueCreate(10, sizeof(uint32_t));
-	xTaskCreate(gpio_event_task, "gpio_event_task", 2048, NULL, 1, NULL);
+	xTaskCreate(gpio_event_task, "gpio_event_task", 4096, NULL, 1, NULL);
 
 	gpio_install_isr_service(ALLOC_FLAGS);
 	gpio_isr_handler_add(BUTTON_NUM, gpio_isr_handler, (void *)BUTTON_NUM);

@@ -27,8 +27,21 @@ void gpio_event_task(void *params) {
 	uint32_t gpio_num;
 	while (true) {
 		if (xQueueReceive(gpio_event_queue, &gpio_num, portMAX_DELAY)) {
-			if (gpio_num == BUTTON_NUM) {
+			if (gpio_num == BUTTON_NUM && s_retry_num >= 0) {
 				ESP_LOGI(TAG, "Button pressed.");
+				remove("/spiffs/wifi.ssid");
+				remove("/spiffs/wifi.pass");
+				remove("/spiffs/wifi.bssid");
+				wifi_disconnect();
+				char **network_list;
+				esp_err_t ret = wifi_scan(&network_list);
+				if (ret != ESP_OK) {
+					ESP_LOGE(TAG, "Failed to scan Wi-Fi.");
+				}
+				ret = wifi_startap();
+				if (ret == ESP_OK) {
+					start_httpserver(network_list);
+				}
 			}
 		} else {
 			ESP_LOGI(TAG, "No interrupt.");

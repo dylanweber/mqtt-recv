@@ -22,6 +22,7 @@
 #include "freertos/queue.h"
 #include "freertos/task.h"
 #include "init.h"
+#include "wifi.h"
 
 void IRAM_ATTR gpio_isr_handler(void *);
 void gpio_event_task(void *);

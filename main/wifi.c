@@ -23,8 +23,6 @@ static EventGroupHandle_t s_wifi_event_group;
 const int WIFI_CONNECTED_BIT_4 = BIT0;
 const int WIFI_CONNECTED_BIT_6 = BIT1;
 
-static int s_retry_num = 0;
-
 static esp_err_t event_handler(void *ctx, system_event_t *event) {
 	switch (event->event_id) {
 		case SYSTEM_EVENT_STA_START:
@@ -45,19 +43,20 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
 			break;
 		case SYSTEM_EVENT_STA_DISCONNECTED: {
 			ESP_LOGI(TAG, "Connection failed\n");
-			if (s_retry_num < CONFIG_ESP_MAXIMUM_RETRY) {
+			if (s_retry_num < CONFIG_ESP_MAXIMUM_RETRY && s_retry_num >= 0) {
 				esp_wifi_connect();
 				xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT_4);
 				xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT_6);
 				s_retry_num++;
 				vTaskDelay(4000 / portTICK_PERIOD_MS);
 				ESP_LOGI(TAG, "Retrying connection...");
-			} else {
+			} else if (s_retry_num >= 0) {
 #ifdef DELETE_ON_FAIL
 				remove("/spiffs/wifi.ssid");
 				remove("/spiffs/wifi.pass");
 				remove("/spiffs/wifi.bssid");
 #endif
+				wifi_disconnect();
 				char **network_list;
 				esp_err_t ret = wifi_scan(&network_list);
 				if (ret != ESP_OK) {
@@ -134,8 +133,10 @@ esp_err_t wifi_restore() {
 esp_err_t wifi_connect(char *ssid, char *pass, uint8_t *bssid) {
 	s_wifi_event_group = xEventGroupCreate();
 
-	tcpip_adapter_init();
 	esp_event_loop_init(event_handler, NULL);
+
+	// Reset retry number
+	s_retry_num = 0;
 
 	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
 	esp_wifi_init(&cfg);
@@ -166,6 +167,16 @@ esp_err_t wifi_connect(char *ssid, char *pass, uint8_t *bssid) {
 	return ESP_OK;
 }
 
+esp_err_t wifi_disconnect() {
+	// Note that we don't want to connect to anything anymore.
+	s_retry_num = -1;
+
+	esp_wifi_disconnect();
+	esp_wifi_stop();
+	esp_wifi_deinit();
+	return ESP_OK;
+}
+
 esp_err_t wifi_startap() {
 	char ssid[20];
 	uint8_t mac[6];
@@ -183,8 +194,10 @@ esp_err_t wifi_startap() {
 
 	s_wifi_event_group = xEventGroupCreate();
 
-	tcpip_adapter_init();
 	esp_event_loop_init(event_handler, NULL);
+
+	// Not attempting to connect to any AP.
+	s_retry_num = -1;
 
 	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
 	esp_wifi_init(&cfg);
