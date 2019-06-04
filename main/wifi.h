@@ -63,7 +63,7 @@ esp_err_t wifi_scan(char ***);
 /// Frees the network list returned from wifi_scan(char ***).
 void free_scan(void *);
 
-/// Number of connection attmpts to a wifi network, -1 if not attempting or broadcasting AP.
+/// Number of connection attempts to a wifi network, -1 if not attempting or broadcasting AP.
 int s_retry_num;
 
 #endif  // WIFI_H

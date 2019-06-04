@@ -16,6 +16,7 @@
  */
 #include "http_serv.h"
 #include "init.h"
+#include "mqtt.h"
 #include "wifi.h"
 
 #include <stdio.h>
@@ -45,7 +46,7 @@ void app_main() {
 			start_httpserver(network_list);
 		}
 	} else {
-		// start_mqtt();
+		start_mqtt();
 	}
 	configure_clear_interrupt();
 	ESP_LOGI(TAG, "Finished startup.");
