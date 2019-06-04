@@ -24,6 +24,18 @@ config DHCP_NAME
 	help
 	Name sent to the router defining the hostname.
 
+config MDNS_NAME
+	string "mDNS Name"
+	default "esp32"
+	help
+	Name sent to discover devices.
+
+config MDNS_INSTANCE
+	string "mDNS Instance Name"
+	default "ESP32 Device"
+	help
+	Readable name sent to discover devices.
+
 config DELETE_ON_FAIL
 	bool "Delete Wi-Fi configuration once it fails?"
 

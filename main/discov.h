@@ -17,7 +17,9 @@
 #ifndef DISCOV_H
 #define DISCOV_H
 
+#include "esp_log.h"
 #include "esp_system.h"
+#include "mdns.h"
 
 /// Starts discovery mechanism via mDNS.
 esp_err_t init_mdns();

@@ -16,6 +16,16 @@
  */
 #include "discov.h"
 
+static const char *TAG = "discov";
+
 esp_err_t init_mdns() {
+	esp_err_t ret = mdns_init();
+	if (ret != ESP_OK) {
+		ESP_LOGE(TAG, "Failure initializing mDNS");
+		return ESP_FAIL;
+	}
+
+	mdns_hostname_set(CONFIG_MDNS_NAME);
+	mdns_instance_name_set(CONFIG_MDNS_INSTANCE);
 	return ESP_OK;
 }
