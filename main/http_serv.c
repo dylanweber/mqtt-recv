@@ -222,6 +222,8 @@ esp_err_t submit_post_handler(httpd_req_t *req) {
 
 		fwrite(bssid_mac, 6, 1, save_fp);
 		fclose(save_fp);
+	} else {
+		remove("/spiffs/wifi.bssid");
 	}
 
 	free(decoded_ssid);

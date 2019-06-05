@@ -19,13 +19,37 @@
 static const char *TAG = "discov";
 
 esp_err_t init_mdns() {
-	esp_err_t ret = mdns_init();
-	if (ret != ESP_OK) {
-		ESP_LOGE(TAG, "Failure initializing mDNS");
-		return ESP_FAIL;
-	}
+	if (xSemaphoreTake(connected_semaphore, portMAX_DELAY)) {
+		esp_err_t ret = mdns_init();
+		if (ret != ESP_OK) {
+			ESP_LOGE(TAG, "Failure initializing mDNS");
+			return ESP_FAIL;
+		}
 
-	mdns_hostname_set(CONFIG_MDNS_NAME);
-	mdns_instance_name_set(CONFIG_MDNS_INSTANCE);
-	return ESP_OK;
+		mdns_hostname_set(CONFIG_MDNS_NAME);
+		mdns_instance_name_set(CONFIG_MDNS_INSTANCE);
+
+		mdns_result_t *results;
+		ret = mdns_query_ptr("_mqtt", "_tcp", 10000, 1, &results);
+		if (ret != ESP_OK) {
+			ESP_LOGE(TAG, "Failure finding mqtt broker via mDNS");
+			return ESP_FAIL;
+		}
+
+		if (results != NULL) {
+			ip_addr_t conn_addr = results->addr->addr;
+
+			if (conn_addr.type == IPADDR_TYPE_V6) {
+				ESP_LOGI(TAG, "Service IPv6: " IPV6STR, IPV62STR(conn_addr.u_addr.ip6));
+			} else {
+				ESP_LOGI(TAG, "Service IPv4: " IPSTR, IP2STR(&(conn_addr.u_addr.ip4)));
+			}
+
+			mdns_query_results_free(results);
+			return ESP_OK;
+		} else {
+			ESP_LOGI(TAG, "Could not find MQTT broker.");
+		}
+	}
+	return ESP_FAIL;
 }

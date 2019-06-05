@@ -34,6 +34,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
 					 ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
 			s_retry_num = 0;
 			xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT_4);
+			xSemaphoreGive(connected_semaphore);
 			break;
 		case SYSTEM_EVENT_AP_STA_GOT_IP6:
 			xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT_6);
@@ -131,6 +132,10 @@ esp_err_t wifi_restore() {
 }
 
 esp_err_t wifi_connect(char *ssid, char *pass, uint8_t *bssid) {
+	// Global-wide OS structures
+	connected_semaphore = NULL;
+	connected_semaphore = xSemaphoreCreateBinary();
+
 	s_wifi_event_group = xEventGroupCreate();
 
 	esp_event_loop_init(event_handler, NULL);

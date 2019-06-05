@@ -14,6 +14,7 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
  */
+#include "discov.h"
 #include "http_serv.h"
 #include "init.h"
 #include "mqtt.h"
@@ -46,6 +47,7 @@ void app_main() {
 			start_httpserver(network_list);
 		}
 	} else {
+		init_mdns();
 		start_mqtt();
 	}
 	configure_clear_interrupt();

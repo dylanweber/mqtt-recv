@@ -20,6 +20,7 @@
 #include "esp_log.h"
 #include "esp_system.h"
 #include "mdns.h"
+#include "wifi.h"
 
 /// Starts discovery mechanism via mDNS.
 esp_err_t init_mdns();
