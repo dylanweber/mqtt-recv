@@ -25,7 +25,7 @@
 /** Starts discovery mechanism via mDNS
  *
  * Params:
- * MQTT IP - A string for the MQTT broker IP.
+ * MQTT IP - A 255-byte buffer for the MQTT broker hostname.
  * MQTT Port - A pointer to a 16-bit integer for the MQTT broker port.
  */
 esp_err_t init_mdns(char *, uint16_t *);

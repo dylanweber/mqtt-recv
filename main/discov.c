@@ -43,8 +43,9 @@ esp_err_t init_mdns(char *mqtt_broker, uint16_t *port) {
 				ESP_LOGI(TAG, "Service IPv6: " IPV6STR, IPV62STR(conn_addr.u_addr.ip6));
 				results = results->next;
 			} else {
-				ip4addr_ntoa_r(&(conn_addr.u_addr.ip4), mqtt_broker, 16);
-				ESP_LOGI(TAG, "Service IPv4: %s", mqtt_broker);
+				char *host = results->hostname;
+				strncpy(mqtt_broker, host, 253);
+				ESP_LOGI(TAG, "Service IPv4 hostname: %s", mqtt_broker);
 				*port = results->port;
 				ESP_LOGI(TAG, "Service port: %u", *port);
 				return ESP_OK;

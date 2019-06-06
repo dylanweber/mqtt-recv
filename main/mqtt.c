@@ -18,15 +18,17 @@
 
 static const char *TAG = "mqtt";
 
-esp_err_t start_mqtt(char *mqtt_ip, uint16_t port) {
+esp_err_t start_mqtt(char *mqtt_broker, uint16_t port) {
 	esp_mqtt_client_config_t mqtt_config = {.uri = NULL,
 											.event_handle = mqtt_event_handler,
 											.port = port,
-											.cert_pem = NULL};  // Change to event loop handle?
+											.cert_pem = NULL,
+											.refresh_connection_after_ms =
+												500};  // Change to event loop handle?
 
-	size_t ip_len = strlen("mqtts://") + strlen(mqtt_ip);
+	size_t ip_len = strlen("mqtts://.lan") + strlen(mqtt_broker);
 	char *final_uri = malloc(ip_len * sizeof(*final_uri));
-	sprintf(final_uri, "mqtts://%s", mqtt_ip);
+	sprintf(final_uri, "mqtts://%s.lan", mqtt_broker);
 	mqtt_config.uri = final_uri;
 
 	char *buffer;
