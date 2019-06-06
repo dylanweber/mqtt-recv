@@ -52,7 +52,7 @@ esp_err_t start_mqtt(char *mqtt_ip, uint16_t port) {
 	esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_config);
 	esp_mqtt_client_start(client);
 
-	free(buffer);
+	// free(buffer); // Certificate required in memory.
 	free(final_uri);
 	return ESP_OK;
 }

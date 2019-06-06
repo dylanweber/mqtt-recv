@@ -46,6 +46,7 @@ esp_err_t init_mdns(char *mqtt_broker, uint16_t *port) {
 				ip4addr_ntoa_r(&(conn_addr.u_addr.ip4), mqtt_broker, 16);
 				ESP_LOGI(TAG, "Service IPv4: %s", mqtt_broker);
 				*port = results->port;
+				ESP_LOGI(TAG, "Service port: %u", *port);
 				return ESP_OK;
 			}
 
