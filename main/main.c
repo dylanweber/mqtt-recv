@@ -47,8 +47,14 @@ void app_main() {
 			start_httpserver(network_list);
 		}
 	} else {
-		init_mdns();
-		start_mqtt();
+		char mqtt_ip[16] = {'\0'};
+		uint16_t port = 0;
+		init_mdns(mqtt_ip, &port);
+		if (mqtt_ip != NULL && port != 0) {
+			start_mqtt(mqtt_ip, port);
+		} else {
+			ESP_LOGI(TAG, "Failed discovery.");
+		}
 	}
 	configure_clear_interrupt();
 	ESP_LOGI(TAG, "Finished startup.");

@@ -17,9 +17,20 @@
 #ifndef MQTT_H
 #define MQTT_H
 
+#include "esp_event.h"
+#include "esp_log.h"
 #include "esp_system.h"
+#include "mqtt_client.h"
 
-/// Starts the MQTT client.
-esp_err_t start_mqtt();
+/** Starts the MQTTS client.
+ *
+ * Params:
+ * IP - The IP address of the broker as a string.
+ * Port - The port of the MQTT broker.
+ */
+esp_err_t start_mqtt(char *, uint16_t);
+
+/// MQTTS client event handler function.
+esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t);
 
 #endif  // MQTT_H

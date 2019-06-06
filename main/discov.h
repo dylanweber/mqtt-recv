@@ -22,7 +22,12 @@
 #include "mdns.h"
 #include "wifi.h"
 
-/// Starts discovery mechanism via mDNS.
-esp_err_t init_mdns();
+/** Starts discovery mechanism via mDNS
+ *
+ * Params:
+ * MQTT IP - A string for the MQTT broker IP.
+ * MQTT Port - A pointer to a 16-bit integer for the MQTT broker port.
+ */
+esp_err_t init_mdns(char *, uint16_t *);
 
 #endif  // DISCOV_H

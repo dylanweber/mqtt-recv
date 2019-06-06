@@ -18,7 +18,7 @@
 
 static const char *TAG = "discov";
 
-esp_err_t init_mdns() {
+esp_err_t init_mdns(char *mqtt_broker, uint16_t *port) {
 	if (xSemaphoreTake(connected_semaphore, portMAX_DELAY)) {
 		esp_err_t ret = mdns_init();
 		if (ret != ESP_OK) {
@@ -36,20 +36,22 @@ esp_err_t init_mdns() {
 			return ESP_FAIL;
 		}
 
-		if (results != NULL) {
+		while (results != NULL) {
 			ip_addr_t conn_addr = results->addr->addr;
 
 			if (conn_addr.type == IPADDR_TYPE_V6) {
 				ESP_LOGI(TAG, "Service IPv6: " IPV6STR, IPV62STR(conn_addr.u_addr.ip6));
+				results = results->next;
 			} else {
-				ESP_LOGI(TAG, "Service IPv4: " IPSTR, IP2STR(&(conn_addr.u_addr.ip4)));
+				ip4addr_ntoa_r(&(conn_addr.u_addr.ip4), mqtt_broker, 16);
+				ESP_LOGI(TAG, "Service IPv4: %s", mqtt_broker);
+				*port = results->port;
+				return ESP_OK;
 			}
 
 			mdns_query_results_free(results);
-			return ESP_OK;
-		} else {
-			ESP_LOGI(TAG, "Could not find MQTT broker.");
 		}
+		ESP_LOGI(TAG, "Could not find MQTT broker.");
 	}
 	return ESP_FAIL;
 }
