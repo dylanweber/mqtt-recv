@@ -26,7 +26,7 @@ esp_err_t start_mqtt(char *mqtt_broker, uint16_t port) {
 											.refresh_connection_after_ms =
 												500};  // Change to event loop handle?
 
-	size_t ip_len = strlen("mqtts://.lan") + strlen(mqtt_broker);
+	size_t ip_len = strlen("mqtts://.lan") + strlen(mqtt_broker) + 1;
 	char *final_uri = malloc(ip_len * sizeof(*final_uri));
 	sprintf(final_uri, "mqtts://%s.lan", mqtt_broker);
 	mqtt_config.uri = final_uri;
@@ -34,7 +34,7 @@ esp_err_t start_mqtt(char *mqtt_broker, uint16_t port) {
 	char *buffer;
 	size_t buffer_len;
 
-	FILE *fp = fopen("/spiffs/ca.crt", "r");
+	FILE *fp = fopen("/spiffs/comb.pem", "r");
 	if (fp == NULL) {
 		ESP_LOGE(TAG, "Failed to open certificate file.");
 		return ESP_FAIL;
@@ -51,6 +51,7 @@ esp_err_t start_mqtt(char *mqtt_broker, uint16_t port) {
 
 	mqtt_config.cert_pem = buffer;
 
+	ESP_LOGI(TAG, "Connecting to %s...", final_uri);
 	esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_config);
 	esp_mqtt_client_start(client);
 
