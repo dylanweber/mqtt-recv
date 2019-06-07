@@ -22,9 +22,9 @@ esp_err_t start_mqtt(char *mqtt_broker, uint16_t port) {
 	esp_mqtt_client_config_t mqtt_config = {.uri = NULL,
 											.event_handle = mqtt_event_handler,
 											.port = port,
+											.client_id = CONFIG_MDNS_NAME,
 											.cert_pem = NULL,
-											.refresh_connection_after_ms =
-												500};  // Change to event loop handle?
+											.refresh_connection_after_ms = 7200000};
 
 	size_t ip_len = strlen("mqtts://.lan") + strlen(mqtt_broker) + 1;
 	char *final_uri = malloc(ip_len * sizeof(*final_uri));
@@ -51,15 +51,35 @@ esp_err_t start_mqtt(char *mqtt_broker, uint16_t port) {
 
 	mqtt_config.cert_pem = buffer;
 
+	ESP_LOGI(TAG, "Cert:\n%s", buffer);
 	ESP_LOGI(TAG, "Connecting to %s...", final_uri);
+	esp_event_loop_create_default();
 	esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_config);
 	esp_mqtt_client_start(client);
 
-	// free(buffer); // Certificate required in memory.
+	// free(buffer);  // Certificate required in memory.
 	free(final_uri);
 	return ESP_OK;
 }
 
 esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
+	esp_mqtt_client_handle_t client = event->client;
+	switch (event->event_id) {
+		case MQTT_EVENT_CONNECTED:
+			ESP_LOGI(TAG, "Connected to MQTT broker.");
+			esp_mqtt_client_subscribe(client, "/topic/test", 2);
+			break;
+		case MQTT_EVENT_DISCONNECTED:
+			ESP_LOGI(TAG, "Disconnected from MQTT broker.");
+			break;
+		case MQTT_EVENT_DATA:
+			ESP_LOGI(TAG, "MQTT_EVENT_DATA");
+			printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
+			printf("DATA=%.*s\r\n", event->data_len, event->data);
+			break;
+		default:
+			ESP_LOGI(TAG, "Other event: %d", event->event_id);
+			break;
+	}
 	return ESP_OK;
 }

@@ -270,7 +270,9 @@ esp_err_t wifi_scan(char ***network_list) {
 	int i;
 	for (i = 0; i < num_ap; i++) {
 		wifi_ap_record_t curr_ap = wifi_aps[i];
-		ESP_LOGI(TAG, "Found AP: %s", curr_ap.ssid);
+		ESP_LOGI(TAG, "Found AP: %s (%x:%x:%x:%x:%x:%x)", curr_ap.ssid, curr_ap.bssid[0],
+				 curr_ap.bssid[1], curr_ap.bssid[2], curr_ap.bssid[3], curr_ap.bssid[4],
+				 curr_ap.bssid[5]);
 		name_list[i] = malloc(33 * sizeof(**name_list));
 		if (name_list[i] == NULL) {
 			return ESP_FAIL;
