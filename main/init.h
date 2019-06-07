@@ -31,11 +31,17 @@
 #include "freertos/queue.h"
 #include "freertos/task.h"
 #include "interrupt.h"
+#include "mqtt_client.h"
 #include "nvs_flash.h"
 
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+
+struct interrupt_info {
+	int button;
+	esp_mqtt_client_handle_t mqtt_handle;
+};
 
 /// Initializes vital ESP32 functions
 esp_err_t app_init();

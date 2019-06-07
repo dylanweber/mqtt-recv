@@ -21,16 +21,21 @@
 #include "esp_log.h"
 #include "esp_system.h"
 #include "mqtt_client.h"
+#include "wifi.h"
 
 /** Starts the MQTTS client.
  *
  * Params:
  * Broker - The mDNS hostname of the broker as a string.
  * Port - The port of the MQTT broker.
+ * Client - A pointer to return the client handle.
  */
-esp_err_t start_mqtt(char *, uint16_t);
+esp_err_t start_mqtt(char *, uint16_t, esp_mqtt_client_handle_t *);
 
 /// MQTTS client event handler function.
 esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t);
+
+/// Number of connection attempts to the MQTT broker, -1 if not attempting to connect.
+int mqtt_retry_num;
 
 #endif  // MQTT_H

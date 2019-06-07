@@ -18,7 +18,9 @@
 
 static const char *TAG = "mqtt";
 
-esp_err_t start_mqtt(char *mqtt_broker, uint16_t port) {
+esp_err_t start_mqtt(char *mqtt_broker, uint16_t port, esp_mqtt_client_handle_t *ret_client) {
+	mqtt_retry_num = -1;
+
 	esp_mqtt_client_config_t mqtt_config = {.uri = NULL,
 											.event_handle = mqtt_event_handler,
 											.port = port,
@@ -28,6 +30,10 @@ esp_err_t start_mqtt(char *mqtt_broker, uint16_t port) {
 
 	size_t ip_len = strlen("mqtts://.lan") + strlen(mqtt_broker) + 1;
 	char *final_uri = malloc(ip_len * sizeof(*final_uri));
+	if (final_uri == NULL) {
+		ESP_LOGE(TAG, "Failed to allocate memory.");
+		return ESP_FAIL;
+	}
 	sprintf(final_uri, "mqtts://%s.lan", mqtt_broker);
 	mqtt_config.uri = final_uri;
 
@@ -37,12 +43,17 @@ esp_err_t start_mqtt(char *mqtt_broker, uint16_t port) {
 	FILE *fp = fopen("/spiffs/comb.pem", "r");
 	if (fp == NULL) {
 		ESP_LOGE(TAG, "Failed to open certificate file.");
+		free(final_uri);
 		return ESP_FAIL;
 	}
 
 	fseek(fp, 0, SEEK_END);
 	buffer_len = ftell(fp);
 	buffer = malloc((buffer_len + 1) * sizeof(*buffer));
+	if (buffer == NULL) {
+		ESP_LOGE(TAG, "Failed to allocate memory.");
+		return ESP_FAIL;
+	}
 	buffer[buffer_len] = '\0';
 
 	fseek(fp, 0, SEEK_SET);
@@ -55,10 +66,18 @@ esp_err_t start_mqtt(char *mqtt_broker, uint16_t port) {
 	ESP_LOGI(TAG, "Connecting to %s...", final_uri);
 	esp_event_loop_create_default();
 	esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_config);
-	esp_mqtt_client_start(client);
+	esp_err_t ret = esp_mqtt_client_start(client);
+	if (ret != ESP_OK) {
+		ESP_LOGI(TAG, "Failed to start MQTT client...");
+		free(buffer);
+		free(final_uri);
+		return ESP_FAIL;
+	}
 
 	// free(buffer);  // Certificate required in memory.
 	free(final_uri);
+	*ret_client = client;
+	mqtt_retry_num = 0;
 	return ESP_OK;
 }
 
@@ -70,6 +89,15 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
 			esp_mqtt_client_subscribe(client, "/topic/test", 2);
 			break;
 		case MQTT_EVENT_DISCONNECTED:
+			mqtt_retry_num++;
+			if (mqtt_retry_num > CONFIG_ESP_MAXIMUM_RETRY) {
+				ESP_LOGI(TAG, "Restarting WiFi configuration for MQTT broker...");
+				wifi_disconnect();
+				vTaskDelay(1000 / portTICK_PERIOD_MS);
+				wifi_restore();
+			} else if (mqtt_retry_num >= 0) {
+				ESP_LOGI(TAG, "Reconnecting to MQTT broker...");
+			}
 			ESP_LOGI(TAG, "Disconnected from MQTT broker.");
 			break;
 		case MQTT_EVENT_DATA:

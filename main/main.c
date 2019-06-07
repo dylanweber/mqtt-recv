@@ -34,6 +34,7 @@ void app_main() {
 	}
 
 	ESP_LOGI(TAG, "Initialized.");
+	esp_mqtt_client_handle_t mqtt_client = NULL;
 	esp_err_t conn_ret = wifi_restore();
 	if (conn_ret != ESP_OK) {
 		char **network_list;
@@ -52,11 +53,11 @@ void app_main() {
 		init_mdns(mqtt_hostname, &port);
 		if (mqtt_hostname != NULL && port != 0) {
 			vTaskDelay(2000 / portTICK_PERIOD_MS);
-			start_mqtt(mqtt_hostname, port);
+			start_mqtt(mqtt_hostname, port, &mqtt_client);
 		} else {
 			ESP_LOGI(TAG, "Failed discovery.");
 		}
 	}
-	configure_clear_interrupt();
+	configure_clear_interrupt(mqtt_client);
 	ESP_LOGI(TAG, "Finished startup.");
 }

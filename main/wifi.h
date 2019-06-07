@@ -64,7 +64,7 @@ esp_err_t wifi_scan(char ***);
 void free_scan(void *);
 
 /// Number of connection attempts to a wifi network, -1 if not attempting or broadcasting AP.
-int s_retry_num;
+int wifi_retry_num;
 
 /// Semaphore to handle connection status.
 SemaphoreHandle_t connected_semaphore;

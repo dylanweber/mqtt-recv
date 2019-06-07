@@ -19,15 +19,16 @@
 static const char *TAG = "int";
 
 void IRAM_ATTR gpio_isr_handler(void *params) {
-	uint32_t gpio_num = (uint32_t)params;
-	xQueueSendFromISR(gpio_event_queue, &gpio_num, NULL);
+	struct interrupt_info *button_int_info = (struct interrupt_info *)params;
+	xQueueSendFromISR(gpio_event_queue, &button_int_info, NULL);
 }
 
 void gpio_event_task(void *params) {
-	uint32_t gpio_num;
+	struct interrupt_info *button_int_info = (struct interrupt_info *)params;
 	while (true) {
-		if (xQueueReceive(gpio_event_queue, &gpio_num, portMAX_DELAY)) {
-			if (gpio_num == BUTTON_NUM && s_retry_num >= 0) {
+		if (xQueueReceive(gpio_event_queue, &button_int_info, portMAX_DELAY)) {
+			if (button_int_info->button == BUTTON_NUM && wifi_retry_num >= 0) {
+				esp_mqtt_client_stop(button_int_info->mqtt_handle);
 				ESP_LOGI(TAG, "Button pressed.");
 				remove("/spiffs/wifi.ssid");
 				remove("/spiffs/wifi.pass");

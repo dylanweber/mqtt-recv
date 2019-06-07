@@ -62,7 +62,7 @@ esp_err_t app_init() {
 	return ESP_OK;
 }
 
-void configure_clear_interrupt() {
+void configure_clear_interrupt(esp_mqtt_client_handle_t mqtt_client) {
 	gpio_config_t io_config;
 	io_config.intr_type = GPIO_INTR_ANYEDGE;
 	io_config.mode = GPIO_MODE_INPUT;
@@ -76,5 +76,9 @@ void configure_clear_interrupt() {
 	xTaskCreate(gpio_event_task, "gpio_event_task", 4096, NULL, 1, NULL);
 
 	gpio_install_isr_service(ALLOC_FLAGS);
-	gpio_isr_handler_add(BUTTON_NUM, gpio_isr_handler, (void *)BUTTON_NUM);
+	struct interrupt_info *button_int_info = malloc(sizeof(*button_int_info));
+	button_int_info->button = BUTTON_NUM;
+	button_int_info->mqtt_handle = mqtt_client;
+
+	gpio_isr_handler_add(BUTTON_NUM, gpio_isr_handler, (void *)button_int_info);
 }

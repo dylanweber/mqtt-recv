@@ -32,7 +32,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
 		case SYSTEM_EVENT_STA_GOT_IP:
 			ESP_LOGI(TAG, "Recieved IP address:%s",
 					 ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
-			s_retry_num = 0;
+			wifi_retry_num = 0;
 			xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT_4);
 			xSemaphoreGive(connected_semaphore);
 			break;
@@ -44,29 +44,30 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
 			break;
 		case SYSTEM_EVENT_STA_DISCONNECTED: {
 			ESP_LOGI(TAG, "Connection failed\n");
-			if (s_retry_num < CONFIG_ESP_MAXIMUM_RETRY && s_retry_num >= 0) {
+			if (wifi_retry_num < CONFIG_ESP_MAXIMUM_RETRY && wifi_retry_num >= 0) {
 				esp_wifi_connect();
 				xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT_4);
 				xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT_6);
-				s_retry_num++;
+				wifi_retry_num++;
 				vTaskDelay(4000 / portTICK_PERIOD_MS);
 				ESP_LOGI(TAG, "Retrying connection...");
-			} else if (s_retry_num >= 0) {
+			} else if (wifi_retry_num >= 0) {
 #ifdef DELETE_ON_FAIL
 				remove("/spiffs/wifi.ssid");
 				remove("/spiffs/wifi.pass");
 				remove("/spiffs/wifi.bssid");
 #endif
 				wifi_disconnect();
-				char **network_list;
-				esp_err_t ret = wifi_scan(&network_list);
-				if (ret != ESP_OK) {
-					ESP_LOGE(TAG, "Failed to scan Wi-Fi.");
-				}
-				ret = wifi_startap();
-				if (ret == ESP_OK) {
-					start_httpserver(network_list);
-				}
+				// char **network_list;
+				// esp_err_t ret = wifi_scan(&network_list);
+				// if (ret != ESP_OK) {
+				// 	ESP_LOGE(TAG, "Failed to scan Wi-Fi.");
+				// }
+				// ret = wifi_startap();
+				// if (ret == ESP_OK) {
+				// 	start_httpserver(network_list);
+				// }
+				esp_restart();
 			}
 			break;
 		}
@@ -141,7 +142,7 @@ esp_err_t wifi_connect(char *ssid, char *pass, uint8_t *bssid) {
 	esp_event_loop_init(event_handler, NULL);
 
 	// Reset retry number
-	s_retry_num = 0;
+	wifi_retry_num = 0;
 
 	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
 	esp_wifi_init(&cfg);
@@ -175,7 +176,7 @@ esp_err_t wifi_connect(char *ssid, char *pass, uint8_t *bssid) {
 
 esp_err_t wifi_disconnect() {
 	// Note that we don't want to connect to anything anymore.
-	s_retry_num = -1;
+	wifi_retry_num = -1;
 
 	esp_wifi_disconnect();
 	esp_wifi_stop();
@@ -203,7 +204,7 @@ esp_err_t wifi_startap() {
 	esp_event_loop_init(event_handler, NULL);
 
 	// Not attempting to connect to any AP.
-	s_retry_num = -1;
+	wifi_retry_num = -1;
 
 	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
 	esp_wifi_init(&cfg);
