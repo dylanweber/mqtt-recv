@@ -146,7 +146,8 @@ esp_err_t wifi_connect(char *ssid, char *pass, uint8_t *bssid) {
 	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
 	esp_wifi_init(&cfg);
 
-	wifi_config_t wifi_config = {.sta = {.ssid = {0}, .password = {0}}};
+	wifi_config_t wifi_config = {
+		.sta = {.ssid = {0}, .password = {0}, .scan_method = WIFI_ALL_CHANNEL_SCAN}};
 
 	strncpy((char *)wifi_config.sta.ssid, ssid, 32);
 	strncpy((char *)wifi_config.sta.password, pass, 64);
