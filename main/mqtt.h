@@ -25,7 +25,7 @@
 /** Starts the MQTTS client.
  *
  * Params:
- * IP - The hostname of the broker as a string.
+ * Broker - The mDNS hostname of the broker as a string.
  * Port - The port of the MQTT broker.
  */
 esp_err_t start_mqtt(char *, uint16_t);

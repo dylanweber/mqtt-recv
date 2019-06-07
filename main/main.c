@@ -47,12 +47,12 @@ void app_main() {
 			start_httpserver(network_list);
 		}
 	} else {
-		char mqtt_ip[255] = {'\0'};
+		char mqtt_hostname[255] = {'\0'};
 		uint16_t port = 0;
-		init_mdns(mqtt_ip, &port);
-		if (mqtt_ip != NULL && port != 0) {
+		init_mdns(mqtt_hostname, &port);
+		if (mqtt_hostname != NULL && port != 0) {
 			vTaskDelay(2000 / portTICK_PERIOD_MS);
-			start_mqtt(mqtt_ip, port);
+			start_mqtt(mqtt_hostname, port);
 		} else {
 			ESP_LOGI(TAG, "Failed discovery.");
 		}
