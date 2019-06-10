@@ -36,7 +36,4 @@ config MDNS_INSTANCE
 	help
 	Readable name sent to discover devices.
 
-config DELETE_ON_FAIL
-	bool "Delete Wi-Fi configuration once it fails?"
-
 endmenu

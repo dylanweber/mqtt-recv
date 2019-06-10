@@ -53,6 +53,8 @@ esp_err_t favicon_get_handler(httpd_req_t *);
 
 /// Delayed restart caused by network setup
 void delayed_restart(void *);
+/// Wi-Fi connect attempt caused by network setup
+void try_network_setup(void *);
 /// Decodes URL-encoded strings
 char *urldecode(char *);
 /// String copy function with forced NULL termination

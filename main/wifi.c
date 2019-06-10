@@ -33,6 +33,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
 			ESP_LOGI(TAG, "Recieved IP address:%s",
 					 ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
 			wifi_retry_num = 0;
+			wifi_new_config = false;
 			xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT_4);
 			xSemaphoreGive(connected_semaphore);
 			break;
@@ -52,21 +53,12 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
 				vTaskDelay(4000 / portTICK_PERIOD_MS);
 				ESP_LOGI(TAG, "Retrying connection...");
 			} else if (wifi_retry_num >= 0) {
-#ifdef DELETE_ON_FAIL
-				remove("/spiffs/wifi.ssid");
-				remove("/spiffs/wifi.pass");
-				remove("/spiffs/wifi.bssid");
-#endif
 				wifi_disconnect();
-				// char **network_list;
-				// esp_err_t ret = wifi_scan(&network_list);
-				// if (ret != ESP_OK) {
-				// 	ESP_LOGE(TAG, "Failed to scan Wi-Fi.");
-				// }
-				// ret = wifi_startap();
-				// if (ret == ESP_OK) {
-				// 	start_httpserver(network_list);
-				// }
+				if (wifi_new_config) {
+					remove("/spiffs/wifi.ssid");
+					remove("/spiffs/wifi.pass");
+					remove("/spiffs/wifi.bssid");
+				}
 				esp_restart();
 			}
 			break;
@@ -136,13 +128,12 @@ esp_err_t wifi_connect(char *ssid, char *pass, uint8_t *bssid) {
 	// Global-wide OS structures
 	connected_semaphore = NULL;
 	connected_semaphore = xSemaphoreCreateBinary();
+	// Reset retry number
+	wifi_retry_num = 0;
 
 	s_wifi_event_group = xEventGroupCreate();
 
 	esp_event_loop_init(event_handler, NULL);
-
-	// Reset retry number
-	wifi_retry_num = 0;
 
 	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
 	esp_wifi_init(&cfg);

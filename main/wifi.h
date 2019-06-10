@@ -69,4 +69,7 @@ int wifi_retry_num;
 /// Semaphore to handle connection status.
 SemaphoreHandle_t connected_semaphore;
 
+/// Boolean to tell when a new config is entered.
+bool wifi_new_config;
+
 #endif  // WIFI_H

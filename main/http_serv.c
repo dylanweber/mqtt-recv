@@ -20,31 +20,29 @@
 
 static const char *TAG = "http";
 
-static TaskHandle_t restart_task = NULL;
+static TaskHandle_t setup_task = NULL;
+
+static httpd_handle_t server = NULL;
 
 httpd_handle_t start_httpserver(char **network_list) {
-	httpd_handle_t server = NULL;
-	httpd_config_t server_config = HTTPD_DEFAULT_CONFIG();
+	if (server == NULL) {
+		httpd_config_t server_config = HTTPD_DEFAULT_CONFIG();
 
-	server_config.global_user_ctx = (void *)network_list;
-	server_config.global_user_ctx_free_fn = free_scan;
+		server_config.global_user_ctx = (void *)network_list;
+		server_config.global_user_ctx_free_fn = free_scan;
 
-	if (httpd_start(&server, &server_config) == ESP_OK) {
-		httpd_register_uri_handler(server, &index_uri);
-		httpd_register_uri_handler(server, &adv_uri);
-		httpd_register_uri_handler(server, &post_uri);
-		httpd_register_uri_handler(server, &favicon_uri);
+		if (httpd_start(&server, &server_config) == ESP_OK) {
+			httpd_register_uri_handler(server, &index_uri);
+			httpd_register_uri_handler(server, &adv_uri);
+			httpd_register_uri_handler(server, &post_uri);
+			httpd_register_uri_handler(server, &favicon_uri);
+		}
 	}
-
 	return server;
 }
 
-void stop_httpserver(httpd_handle_t server) {
-	if (restart_task != NULL) {
-		vTaskDelete(restart_task);
-	}
-
-	httpd_stop(server);
+void stop_httpserver(httpd_handle_t server_handle) {
+	httpd_stop(server_handle);
 }
 
 esp_err_t index_get_handler(httpd_req_t *req) {
@@ -252,8 +250,7 @@ esp_err_t submit_post_handler(httpd_req_t *req) {
 	httpd_resp_send(req, buffer, buffer_len);
 	free(buffer);
 
-	xTaskCreate(delayed_restart, "restart", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY,
-				&restart_task);
+	xTaskCreate(try_network_setup, "network_setup", 4096, NULL, tskIDLE_PRIORITY, &setup_task);
 	return ESP_OK;
 }
 
@@ -289,6 +286,20 @@ void delayed_restart(void *params) {
 	esp_wifi_deinit();
 	vTaskDelay(100 / portTICK_PERIOD_MS);
 	esp_restart();
+}
+
+void try_network_setup(void *params) {
+	ESP_LOGI(TAG, "HTTP server stopping & connecting...");
+	vTaskDelay(2500 / portTICK_PERIOD_MS);
+	stop_httpserver(server);
+	server = NULL;
+
+	wifi_disconnect();
+	vTaskDelay(1000 / portTICK_PERIOD_MS);
+	wifi_new_config = true;
+	wifi_restore();
+
+	vTaskDelete(setup_task);
 }
 
 char *urldecode(char *encoded_string) {

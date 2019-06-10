@@ -58,11 +58,11 @@ esp_err_t app_init() {
 	ESP_LOGI(TAG, "Read from example.txt: %s", buf);
 
 	tcpip_adapter_init();
-
+	wifi_new_config = false;
 	return ESP_OK;
 }
 
-void configure_clear_interrupt(esp_mqtt_client_handle_t mqtt_client) {
+void configure_clear_interrupt(esp_mqtt_client_handle_t **mqtt_client) {
 	gpio_config_t io_config;
 	io_config.intr_type = GPIO_INTR_ANYEDGE;
 	io_config.mode = GPIO_MODE_INPUT;
@@ -81,4 +81,29 @@ void configure_clear_interrupt(esp_mqtt_client_handle_t mqtt_client) {
 	button_int_info->mqtt_handle = mqtt_client;
 
 	gpio_isr_handler_add(BUTTON_NUM, gpio_isr_handler, (void *)button_int_info);
+}
+
+void mqtt_routine(esp_mqtt_client_handle_t **mqtt_client) {
+	char mqtt_hostname[255] = {'\0'};
+	uint16_t port = 0;
+	init_mdns(mqtt_hostname, &port);
+	if (mqtt_hostname != NULL && port != 0) {
+		vTaskDelay(2000 / portTICK_PERIOD_MS);
+		start_mqtt(mqtt_hostname, port, mqtt_client);
+	} else {
+		ESP_LOGI(TAG, "Failed discovery.");
+	}
+}
+
+void setup_routine() {
+	char **network_list;
+	esp_err_t ret = wifi_scan(&network_list);
+	if (ret != ESP_OK) {
+		ESP_LOGE(TAG, "Failed to scan Wi-Fi.");
+		return;
+	}
+	ret = wifi_startap();
+	if (ret == ESP_OK) {
+		start_httpserver(network_list);
+	}
 }

@@ -24,25 +24,30 @@ void IRAM_ATTR gpio_isr_handler(void *params) {
 }
 
 void gpio_event_task(void *params) {
-	struct interrupt_info *button_int_info = (struct interrupt_info *)params;
+	struct interrupt_info *button_int_info;
 	while (true) {
 		if (xQueueReceive(gpio_event_queue, &button_int_info, portMAX_DELAY)) {
 			if (button_int_info->button == BUTTON_NUM && wifi_retry_num >= 0) {
-				esp_mqtt_client_stop(button_int_info->mqtt_handle);
+				struct interrupt_info *button_temp;
+				if (xQueueReceive(gpio_event_queue, &button_temp, 3000 / portTICK_PERIOD_MS) &&
+					button_temp->button == BUTTON_NUM) {
+					ESP_LOGI(TAG, "Too soon.");
+					continue;
+				}
+				if (!xQueueReceive(gpio_event_queue, &button_temp, 3000 / portTICK_PERIOD_MS) ||
+					button_temp->button != BUTTON_NUM) {
+					ESP_LOGI(TAG, "Too late.");
+					continue;
+				}
+				if (*button_int_info->mqtt_handle != NULL) {
+					esp_mqtt_client_stop(**button_int_info->mqtt_handle);
+				}
 				ESP_LOGI(TAG, "Button pressed.");
 				remove("/spiffs/wifi.ssid");
 				remove("/spiffs/wifi.pass");
 				remove("/spiffs/wifi.bssid");
 				wifi_disconnect();
-				char **network_list;
-				esp_err_t ret = wifi_scan(&network_list);
-				if (ret != ESP_OK) {
-					ESP_LOGE(TAG, "Failed to scan Wi-Fi.");
-				}
-				ret = wifi_startap();
-				if (ret == ESP_OK) {
-					start_httpserver(network_list);
-				}
+				setup_routine();
 			}
 		} else {
 			ESP_LOGI(TAG, "No interrupt.");
