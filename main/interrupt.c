@@ -28,19 +28,21 @@ void gpio_event_task(void *params) {
 	while (true) {
 		if (xQueueReceive(gpio_event_queue, &button_int_info, portMAX_DELAY)) {
 			if (button_int_info->button == BUTTON_NUM && wifi_retry_num >= 0) {
-				struct interrupt_info *button_temp;
-				if (xQueueReceive(gpio_event_queue, &button_temp, 3000 / portTICK_PERIOD_MS) &&
-					button_temp->button == BUTTON_NUM) {
-					ESP_LOGI(TAG, "Too soon.");
-					continue;
-				}
-				if (!xQueueReceive(gpio_event_queue, &button_temp, 3000 / portTICK_PERIOD_MS) ||
-					button_temp->button != BUTTON_NUM) {
-					ESP_LOGI(TAG, "Too late.");
-					continue;
-				}
+				// struct interrupt_info *button_temp;
+				// if (xQueueReceive(gpio_event_queue, &button_temp, 3000 / portTICK_PERIOD_MS) &&
+				// 	button_temp->button == BUTTON_NUM) {
+				// 	ESP_LOGI(TAG, "Too soon.");
+				// 	continue;
+				// }
+				// if (!xQueueReceive(gpio_event_queue, &button_temp, 3000 / portTICK_PERIOD_MS) ||
+				// 	button_temp->button != BUTTON_NUM) {
+				// 	ESP_LOGI(TAG, "Too late.");
+				// 	continue;
+				// }
 				if (*button_int_info->mqtt_handle != NULL) {
 					esp_mqtt_client_stop(**button_int_info->mqtt_handle);
+				} else {
+					ESP_LOGI(TAG, "Cannot stop MQTT server...");
 				}
 				ESP_LOGI(TAG, "Button pressed.");
 				remove("/spiffs/wifi.ssid");
@@ -48,6 +50,13 @@ void gpio_event_task(void *params) {
 				remove("/spiffs/wifi.bssid");
 				wifi_disconnect();
 				setup_routine();
+			} else if (button_int_info->button == EXT_NUM) {
+				if (*button_int_info->mqtt_handle != NULL) {
+					esp_mqtt_client_publish(**button_int_info->mqtt_handle, "/doorbell/chime",
+											"ring", 0, 2, true);
+					ESP_LOGI(TAG, "Publishing chime press.");
+				}
+				ESP_LOGI(TAG, "Doorbell chime.");
 			}
 		} else {
 			ESP_LOGI(TAG, "No interrupt.");

@@ -76,8 +76,10 @@ esp_err_t start_mqtt(char *mqtt_broker, uint16_t port, esp_mqtt_client_handle_t 
 
 	// free(buffer);  // Certificate required in memory.
 	free(final_uri);
-	*ret_client = malloc(sizeof(**ret_client));
-	**ret_client = client;
+	if (ret_client != NULL) {
+		*ret_client = malloc(sizeof(**ret_client));
+		**ret_client = client;
+	}
 	mqtt_retry_num = 0;
 	return ESP_OK;
 }
@@ -88,13 +90,24 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
 		case MQTT_EVENT_CONNECTED:
 			ESP_LOGI(TAG, "Connected to MQTT broker.");
 			esp_mqtt_client_subscribe(client, "/topic/test", 2);
+			ESP_LOGI(TAG, "new config: %d", wifi_new_config);
+			if (wifi_new_config) {
+				esp_mqtt_client_stop(client);
+				wifi_disconnect();
+				esp_restart();
+			}
 			break;
 		case MQTT_EVENT_DISCONNECTED:
 			mqtt_retry_num++;
 			if (mqtt_retry_num > CONFIG_ESP_MAXIMUM_RETRY) {
 				ESP_LOGI(TAG, "Restarting WiFi configuration for MQTT broker...");
 				wifi_disconnect();
-				vTaskDelay(1000 / portTICK_PERIOD_MS);
+				if (wifi_new_config) {
+					remove("/spiffs/wifi.ssid");
+					remove("/spiffs/wifi.pass");
+					remove("/spiffs/wifi.bssid");
+				}
+				esp_restart();
 				wifi_restore();
 			} else if (mqtt_retry_num >= 0) {
 				ESP_LOGI(TAG, "Reconnecting to MQTT broker...");

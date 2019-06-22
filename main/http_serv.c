@@ -298,6 +298,7 @@ void try_network_setup(void *params) {
 	vTaskDelay(1000 / portTICK_PERIOD_MS);
 	wifi_new_config = true;
 	wifi_restore();
+	mqtt_routine(NULL);
 
 	vTaskDelete(setup_task);
 }

@@ -54,6 +54,8 @@ esp_err_t init_mdns(char *mqtt_broker, uint16_t *port) {
 			mdns_query_results_free(results);
 		}
 		ESP_LOGI(TAG, "Could not find MQTT broker.");
+		vTaskDelay(10000 / portTICK_PERIOD_MS);
+		esp_restart();
 	}
 	return ESP_FAIL;
 }

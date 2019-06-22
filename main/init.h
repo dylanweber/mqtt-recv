@@ -19,6 +19,10 @@
 
 #define BUTTON_NUM GPIO_NUM_4
 #define BUTTON_MSK (1ULL << BUTTON_NUM)
+
+#define EXT_NUM GPIO_NUM_5
+#define EXT_MSK (1ULL << EXT_NUM)
+
 #define ALLOC_FLAGS 0
 
 #include "discov.h"
@@ -49,6 +53,8 @@ struct interrupt_info {
 esp_err_t app_init();
 /// Configures the clear button interrupt on GPIO4
 void configure_clear_interrupt();
+/// Configures the external peripheral interrupt on GPIO5
+void configure_ext_interrupt(esp_mqtt_client_handle_t **);
 /// Starts MQTT client.
 void mqtt_routine(esp_mqtt_client_handle_t **mqtt_client);
 /// Starts setup server.

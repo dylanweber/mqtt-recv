@@ -33,6 +33,7 @@ void app_main() {
 
 	esp_mqtt_client_handle_t *mqtt_client = NULL;
 	configure_clear_interrupt(&mqtt_client);
+	configure_ext_interrupt(&mqtt_client);
 
 	esp_err_t conn_ret = wifi_restore();
 	if (conn_ret != ESP_OK) {

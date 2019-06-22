@@ -33,7 +33,6 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
 			ESP_LOGI(TAG, "Recieved IP address:%s",
 					 ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
 			wifi_retry_num = 0;
-			wifi_new_config = false;
 			xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT_4);
 			xSemaphoreGive(connected_semaphore);
 			break;

@@ -59,12 +59,13 @@ esp_err_t app_init() {
 
 	tcpip_adapter_init();
 	wifi_new_config = false;
+	gpio_event_queue = NULL;
 	return ESP_OK;
 }
 
 void configure_clear_interrupt(esp_mqtt_client_handle_t **mqtt_client) {
 	gpio_config_t io_config;
-	io_config.intr_type = GPIO_INTR_ANYEDGE;
+	io_config.intr_type = GPIO_INTR_POSEDGE;
 	io_config.mode = GPIO_MODE_INPUT;
 	io_config.pull_up_en = GPIO_PULLUP_DISABLE;
 	io_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
@@ -72,10 +73,13 @@ void configure_clear_interrupt(esp_mqtt_client_handle_t **mqtt_client) {
 
 	gpio_config(&io_config);
 
-	gpio_event_queue = xQueueCreate(10, sizeof(uint32_t));
-	xTaskCreate(gpio_event_task, "gpio_event_task", 4096, NULL, 1, NULL);
+	if (gpio_event_queue == NULL) {
+		gpio_event_queue = xQueueCreate(10, sizeof(uint32_t));
+		xTaskCreate(gpio_event_task, "gpio_event_task", 4096, NULL, 1, NULL);
 
-	gpio_install_isr_service(ALLOC_FLAGS);
+		gpio_install_isr_service(ALLOC_FLAGS);
+	}
+
 	struct interrupt_info *button_int_info = malloc(sizeof(*button_int_info));
 	button_int_info->button = BUTTON_NUM;
 	button_int_info->mqtt_handle = mqtt_client;
@@ -83,12 +87,36 @@ void configure_clear_interrupt(esp_mqtt_client_handle_t **mqtt_client) {
 	gpio_isr_handler_add(BUTTON_NUM, gpio_isr_handler, (void *)button_int_info);
 }
 
+void configure_ext_interrupt(esp_mqtt_client_handle_t **mqtt_client) {
+	gpio_config_t io_config;
+	io_config.intr_type = GPIO_INTR_POSEDGE;
+	io_config.mode = GPIO_MODE_INPUT;
+	io_config.pull_up_en = GPIO_PULLUP_DISABLE;
+	io_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
+	io_config.pin_bit_mask = EXT_MSK;
+
+	gpio_config(&io_config);
+
+	if (gpio_event_queue == NULL) {
+		gpio_event_queue = xQueueCreate(10, sizeof(uint32_t));
+		xTaskCreate(gpio_event_task, "gpio_event_task", 4096, NULL, 1, NULL);
+
+		gpio_install_isr_service(ALLOC_FLAGS);
+	}
+
+	struct interrupt_info *ext_int_info = malloc(sizeof(*ext_int_info));
+	ext_int_info->button = EXT_NUM;
+	ext_int_info->mqtt_handle = mqtt_client;
+
+	gpio_isr_handler_add(EXT_NUM, gpio_isr_handler, (void *)ext_int_info);
+}
+
 void mqtt_routine(esp_mqtt_client_handle_t **mqtt_client) {
 	char mqtt_hostname[255] = {'\0'};
 	uint16_t port = 0;
 	init_mdns(mqtt_hostname, &port);
 	if (mqtt_hostname != NULL && port != 0) {
-		vTaskDelay(2000 / portTICK_PERIOD_MS);
+		vTaskDelay(100 / portTICK_PERIOD_MS);
 		start_mqtt(mqtt_hostname, port, mqtt_client);
 	} else {
 		ESP_LOGI(TAG, "Failed discovery.");

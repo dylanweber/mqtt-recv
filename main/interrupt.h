@@ -22,6 +22,7 @@
 #include "freertos/queue.h"
 #include "freertos/task.h"
 #include "init.h"
+#include "mqtt_client.h"
 #include "wifi.h"
 
 /// GPIO event handler that stores information in the GPIO event queue
