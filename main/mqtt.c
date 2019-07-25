@@ -20,6 +20,7 @@ static const char *TAG = "mqtt";
 
 esp_err_t start_mqtt(char *mqtt_broker, uint16_t port, esp_mqtt_client_handle_t **ret_client) {
 	mqtt_retry_num = -1;
+	mqtt_connected = false;
 
 	esp_mqtt_client_config_t mqtt_config = {.uri = NULL,
 											.event_handle = mqtt_event_handler,
@@ -79,6 +80,9 @@ esp_err_t start_mqtt(char *mqtt_broker, uint16_t port, esp_mqtt_client_handle_t 
 	if (ret_client != NULL) {
 		*ret_client = malloc(sizeof(**ret_client));
 		**ret_client = client;
+	} else {
+		ESP_LOGI(TAG, "Successfully tested MQTT client... restarting...");
+		esp_restart();
 	}
 	mqtt_retry_num = 0;
 	return ESP_OK;
@@ -88,6 +92,7 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
 	esp_mqtt_client_handle_t client = event->client;
 	switch (event->event_id) {
 		case MQTT_EVENT_CONNECTED:
+			mqtt_connected = true;
 			ESP_LOGI(TAG, "Connected to MQTT broker.");
 			esp_mqtt_client_subscribe(client, "/topic/test", 2);
 			ESP_LOGI(TAG, "new config: %d", wifi_new_config);
@@ -98,6 +103,7 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
 			}
 			break;
 		case MQTT_EVENT_DISCONNECTED:
+			mqtt_connected = false;
 			mqtt_retry_num++;
 			if (mqtt_retry_num > CONFIG_ESP_MAXIMUM_RETRY) {
 				ESP_LOGI(TAG, "Restarting WiFi configuration for MQTT broker...");

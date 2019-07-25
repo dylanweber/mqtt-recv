@@ -61,7 +61,7 @@ esp_err_t app_init() {
 	wifi_new_config = false;
 	gpio_event_queue = NULL;
 
-	setup_status_led();
+	xTaskCreate(setup_status_led, "status_led", 4096, NULL, tskIDLE_PRIORITY, NULL);
 	return ESP_OK;
 }
 
@@ -117,6 +117,15 @@ void setup_status_led() {
 	gpio_pad_select_gpio(STATUS_NUM);
 	gpio_set_direction(STATUS_NUM, GPIO_MODE_OUTPUT);
 	gpio_set_level(STATUS_NUM, true);
+	while (true) {
+		while (mqtt_connected == false) {
+			gpio_set_level(STATUS_NUM, false);
+			vTaskDelay(300 / portTICK_PERIOD_MS);
+			gpio_set_level(STATUS_NUM, true);
+			vTaskDelay(300 / portTICK_PERIOD_MS);
+		}
+		vTaskDelay(1000 / portTICK_PERIOD_MS);
+	}
 }
 
 void mqtt_routine(esp_mqtt_client_handle_t **mqtt_client) {

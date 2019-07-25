@@ -40,6 +40,9 @@ void gpio_event_task(void *params) {
 				// 	continue;
 				// }
 				if (*button_int_info->mqtt_handle != NULL) {
+					if (**button_int_info->mqtt_handle == NULL) {
+						ESP_LOGI(TAG, "MQTT handle is NULL.");
+					}
 					esp_mqtt_client_stop(**button_int_info->mqtt_handle);
 				} else {
 					ESP_LOGI(TAG, "Cannot stop MQTT server...");

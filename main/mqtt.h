@@ -38,4 +38,7 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t);
 /// Number of connection attempts to the MQTT broker, -1 if not attempting to connect.
 int mqtt_retry_num;
 
+/// Whether connected or not to MQTT broker.
+bool mqtt_connected;
+
 #endif  // MQTT_H
