@@ -25,6 +25,9 @@
 
 #define ALLOC_FLAGS 0
 
+#define STATUS_NUM GPIO_NUM_22
+#define STATUS_MSK (1ULL << STATUS_NUM)
+
 #include "discov.h"
 #include "driver/gpio.h"
 #include "esp_err.h"
@@ -55,6 +58,8 @@ esp_err_t app_init();
 void configure_clear_interrupt();
 /// Configures the external peripheral interrupt on GPIO5
 void configure_ext_interrupt(esp_mqtt_client_handle_t **);
+/// Turns on status LED.
+void setup_status_led();
 /// Starts MQTT client.
 void mqtt_routine(esp_mqtt_client_handle_t **mqtt_client);
 /// Starts setup server.

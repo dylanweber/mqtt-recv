@@ -60,6 +60,8 @@ esp_err_t app_init() {
 	tcpip_adapter_init();
 	wifi_new_config = false;
 	gpio_event_queue = NULL;
+
+	setup_status_led();
 	return ESP_OK;
 }
 
@@ -109,6 +111,12 @@ void configure_ext_interrupt(esp_mqtt_client_handle_t **mqtt_client) {
 	ext_int_info->mqtt_handle = mqtt_client;
 
 	gpio_isr_handler_add(EXT_NUM, gpio_isr_handler, (void *)ext_int_info);
+}
+
+void setup_status_led() {
+	gpio_pad_select_gpio(STATUS_NUM);
+	gpio_set_direction(STATUS_NUM, GPIO_MODE_OUTPUT);
+	gpio_set_level(STATUS_NUM, true);
 }
 
 void mqtt_routine(esp_mqtt_client_handle_t **mqtt_client) {
