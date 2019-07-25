@@ -65,7 +65,9 @@ esp_err_t app_init() {
 	return ESP_OK;
 }
 
-void configure_clear_interrupt(esp_mqtt_client_handle_t **mqtt_client) {
+void configure_clear_interrupt(esp_mqtt_client_handle_t *mqtt_client) {
+	ESP_LOGI(TAG, "useful number: %p", mqtt_client);
+
 	gpio_config_t io_config;
 	io_config.intr_type = GPIO_INTR_POSEDGE;
 	io_config.mode = GPIO_MODE_INPUT;
@@ -89,7 +91,7 @@ void configure_clear_interrupt(esp_mqtt_client_handle_t **mqtt_client) {
 	gpio_isr_handler_add(BUTTON_NUM, gpio_isr_handler, (void *)button_int_info);
 }
 
-void configure_ext_interrupt(esp_mqtt_client_handle_t **mqtt_client) {
+void configure_ext_interrupt(esp_mqtt_client_handle_t *mqtt_client) {
 	gpio_config_t io_config;
 	io_config.intr_type = GPIO_INTR_POSEDGE;
 	io_config.mode = GPIO_MODE_INPUT;
@@ -128,7 +130,8 @@ void setup_status_led() {
 	}
 }
 
-void mqtt_routine(esp_mqtt_client_handle_t **mqtt_client) {
+void mqtt_routine(esp_mqtt_client_handle_t *mqtt_client) {
+	ESP_LOGI(TAG, "useful number: %p", mqtt_client);
 	char mqtt_hostname[255] = {'\0'};
 	uint16_t port = 0;
 	init_mdns(mqtt_hostname, &port);

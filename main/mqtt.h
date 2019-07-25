@@ -30,7 +30,7 @@
  * Port - The port of the MQTT broker.
  * Client - A pointer to return the client handle.
  */
-esp_err_t start_mqtt(char *, uint16_t, esp_mqtt_client_handle_t **);
+esp_err_t start_mqtt(char *, uint16_t, esp_mqtt_client_handle_t *);
 
 /// MQTTS client event handler function.
 esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t);

@@ -49,7 +49,7 @@
 
 struct interrupt_info {
 	int button;
-	esp_mqtt_client_handle_t **mqtt_handle;
+	esp_mqtt_client_handle_t *mqtt_handle;
 };
 
 /// Initializes vital ESP32 functions
@@ -57,15 +57,18 @@ esp_err_t app_init();
 /// Configures the clear button interrupt on GPIO4
 void configure_clear_interrupt();
 /// Configures the external peripheral interrupt on GPIO5
-void configure_ext_interrupt(esp_mqtt_client_handle_t **);
+void configure_ext_interrupt(esp_mqtt_client_handle_t *);
 /// Turns on status LED.
 void setup_status_led();
 /// Starts MQTT client.
-void mqtt_routine(esp_mqtt_client_handle_t **mqtt_client);
+void mqtt_routine(esp_mqtt_client_handle_t *);
 /// Starts setup server.
 void setup_routine();
 
 /// GPIO event queue used for storing GPIO interrupt information
 QueueHandle_t gpio_event_queue;
+
+/// Handler for MQTT client.
+esp_mqtt_client_handle_t mqtt_client;
 
 #endif  // INIT_H

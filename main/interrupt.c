@@ -39,13 +39,15 @@ void gpio_event_task(void *params) {
 				// 	ESP_LOGI(TAG, "Too late.");
 				// 	continue;
 				// }
-				if (*button_int_info->mqtt_handle != NULL) {
-					if (**button_int_info->mqtt_handle == NULL) {
+				if (button_int_info->mqtt_handle != NULL) {
+					ESP_LOGI(TAG, "useful number: %p", button_int_info->mqtt_handle);
+					if (*button_int_info->mqtt_handle == NULL) {
 						ESP_LOGI(TAG, "MQTT handle is NULL.");
+					} else {
+						esp_mqtt_client_stop(*button_int_info->mqtt_handle);
 					}
-					esp_mqtt_client_stop(**button_int_info->mqtt_handle);
 				} else {
-					ESP_LOGI(TAG, "Cannot stop MQTT server...");
+					ESP_LOGI(TAG, "Cannot stop MQTT server, reference is NULL...");
 				}
 				ESP_LOGI(TAG, "Button pressed.");
 				remove("/spiffs/wifi.ssid");
@@ -55,7 +57,7 @@ void gpio_event_task(void *params) {
 				setup_routine();
 			} else if (button_int_info->button == EXT_NUM) {
 				if (*button_int_info->mqtt_handle != NULL) {
-					esp_mqtt_client_publish(**button_int_info->mqtt_handle, "/doorbell/chime",
+					esp_mqtt_client_publish(*button_int_info->mqtt_handle, "/doorbell/chime",
 											"ring", 0, 2, true);
 					ESP_LOGI(TAG, "Publishing chime press.");
 				}

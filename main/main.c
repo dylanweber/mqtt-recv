@@ -31,7 +31,7 @@ void app_main() {
 	}
 	ESP_LOGI(TAG, "Initialized.");
 
-	esp_mqtt_client_handle_t *mqtt_client = NULL;
+	mqtt_client = NULL;
 	configure_clear_interrupt(&mqtt_client);
 	configure_ext_interrupt(&mqtt_client);
 

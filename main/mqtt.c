@@ -18,7 +18,7 @@
 
 static const char *TAG = "mqtt";
 
-esp_err_t start_mqtt(char *mqtt_broker, uint16_t port, esp_mqtt_client_handle_t **ret_client) {
+esp_err_t start_mqtt(char *mqtt_broker, uint16_t port, esp_mqtt_client_handle_t *ret_client) {
 	mqtt_retry_num = -1;
 	mqtt_connected = false;
 
@@ -63,7 +63,7 @@ esp_err_t start_mqtt(char *mqtt_broker, uint16_t port, esp_mqtt_client_handle_t 
 
 	mqtt_config.cert_pem = buffer;
 
-	ESP_LOGI(TAG, "Cert:\n%s", buffer);
+	// ESP_LOGI(TAG, "Cert:\n%s", buffer);
 	ESP_LOGI(TAG, "Connecting to %s...", final_uri);
 	esp_event_loop_create_default();
 	esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_config);
@@ -77,9 +77,9 @@ esp_err_t start_mqtt(char *mqtt_broker, uint16_t port, esp_mqtt_client_handle_t 
 
 	// free(buffer);  // Certificate required in memory.
 	free(final_uri);
+	ESP_LOGI(TAG, "useful number: %p", ret_client);
 	if (ret_client != NULL) {
-		*ret_client = malloc(sizeof(**ret_client));
-		**ret_client = client;
+		*ret_client = client;
 	} else {
 		ESP_LOGI(TAG, "Successfully tested MQTT client... restarting...");
 		esp_restart();
