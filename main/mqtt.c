@@ -145,7 +145,7 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
 
 void mqtt_rolling_timeout(void *params) {
 	esp_mqtt_client_handle_t client = (esp_mqtt_client_handle_t)params;
-	vTaskDelay(10000 / portTICK_PERIOD_MS);
+	vTaskDelay(8000 / portTICK_PERIOD_MS);
 	if (mqtt_connected && mqtt_rolling_code == 0) {
 		ESP_LOGI(TAG, "Rolling code timout...");
 		char number[10];
