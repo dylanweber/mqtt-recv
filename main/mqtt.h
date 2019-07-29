@@ -34,11 +34,16 @@ esp_err_t start_mqtt(char *, uint16_t, esp_mqtt_client_handle_t *);
 
 /// MQTTS client event handler function.
 esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t);
+/// Checks if rolling code exists on the broker.
+void mqtt_rolling_timeout(void *);
 
 /// Number of connection attempts to the MQTT broker, -1 if not attempting to connect.
 int mqtt_retry_num;
 
 /// Whether connected or not to MQTT broker.
 bool mqtt_connected;
+
+/// Rolling code used for confirming doorbell rings.
+unsigned int mqtt_rolling_code;
 
 #endif  // MQTT_H

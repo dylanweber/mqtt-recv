@@ -21,6 +21,7 @@ static const char *TAG = "mqtt";
 esp_err_t start_mqtt(char *mqtt_broker, uint16_t port, esp_mqtt_client_handle_t *ret_client) {
 	mqtt_retry_num = -1;
 	mqtt_connected = false;
+	mqtt_rolling_code = 0;
 
 	esp_mqtt_client_config_t mqtt_config = {.uri = NULL,
 											.event_handle = mqtt_event_handler,
@@ -94,13 +95,15 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
 		case MQTT_EVENT_CONNECTED:
 			mqtt_connected = true;
 			ESP_LOGI(TAG, "Connected to MQTT broker.");
-			esp_mqtt_client_subscribe(client, "/topic/test", 2);
+			esp_mqtt_client_subscribe(client, "/doorbell/roll", 2);
 			ESP_LOGI(TAG, "new config: %d", wifi_new_config);
 			if (wifi_new_config) {
 				esp_mqtt_client_stop(client);
 				wifi_disconnect();
 				esp_restart();
 			}
+			xTaskCreate(mqtt_rolling_timeout, "rolling_timeout", 4096, &mqtt_client,
+						tskIDLE_PRIORITY, NULL);
 			break;
 		case MQTT_EVENT_DISCONNECTED:
 			mqtt_connected = false;
@@ -124,10 +127,30 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
 			ESP_LOGI(TAG, "MQTT_EVENT_DATA");
 			printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
 			printf("DATA=%.*s\r\n", event->data_len, event->data);
+			if (strncmp(event->topic, "/doorbell/roll", event->topic_len) == 0) {
+				unsigned int new_code = strtoul(event->data, NULL, 10);
+				if (new_code == 0) {
+					mqtt_rolling_code = 1;
+				} else {
+					mqtt_rolling_code = new_code;
+				}
+			}
 			break;
 		default:
 			ESP_LOGI(TAG, "Other event: %d", event->event_id);
 			break;
 	}
 	return ESP_OK;
+}
+
+void mqtt_rolling_timeout(void *params) {
+	esp_mqtt_client_handle_t client = (esp_mqtt_client_handle_t)params;
+	vTaskDelay(10000 / portTICK_PERIOD_MS);
+	if (mqtt_connected && mqtt_rolling_code == 0) {
+		ESP_LOGI(TAG, "Rolling code timout...");
+		char number[10];
+		sprintf(number, "%u", ++mqtt_rolling_code);
+		esp_mqtt_client_publish(client, "/doorbell/roll", number, 0, 2, true);
+	}
+	vTaskDelete(NULL);
 }
