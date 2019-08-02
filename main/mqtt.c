@@ -21,6 +21,7 @@ static const char *TAG = "mqtt";
 esp_err_t start_mqtt(char *mqtt_broker, uint16_t port, esp_mqtt_client_handle_t *ret_client) {
 	mqtt_retry_num = -1;
 	mqtt_connected = false;
+	mqtt_connect_once = false;
 	mqtt_rolling_code = 0;
 
 	esp_mqtt_client_config_t mqtt_config = {.uri = NULL,
@@ -94,6 +95,7 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
 	switch (event->event_id) {
 		case MQTT_EVENT_CONNECTED:
 			mqtt_connected = true;
+			mqtt_connect_once = true;
 			ESP_LOGI(TAG, "Connected to MQTT broker.");
 			esp_mqtt_client_subscribe(client, "/doorbell/roll", 2);
 			ESP_LOGI(TAG, "new config: %d", wifi_new_config);
@@ -108,7 +110,8 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
 		case MQTT_EVENT_DISCONNECTED:
 			mqtt_connected = false;
 			mqtt_retry_num++;
-			if (mqtt_retry_num > CONFIG_ESP_MAXIMUM_RETRY) {
+			if ((mqtt_retry_num > CONFIG_ESP_MAXIMUM_RETRY && !mqtt_connect_once) ||
+				(mqtt_retry_num > 5 * CONFIG_ESP_MAXIMUM_RETRY && mqtt_connect_once)) {
 				ESP_LOGI(TAG, "Restarting WiFi configuration for MQTT broker...");
 				wifi_disconnect();
 				if (wifi_new_config) {
@@ -127,12 +130,19 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
 			ESP_LOGI(TAG, "MQTT_EVENT_DATA");
 			printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
 			printf("DATA=%.*s\r\n", event->data_len, event->data);
+			char data_cpy[10];
+			memset(data_cpy, 0, sizeof(data_cpy));
+			strncpy(data_cpy, event->data, (event->data_len < 10) ? event->data_len : 10);
 			if (strncmp(event->topic, "/doorbell/roll", event->topic_len) == 0) {
-				unsigned int new_code = strtoul(event->data, NULL, 10);
-				if (new_code == 0) {
+				unsigned int new_code = strtoul(data_cpy, NULL, 10);
+				if (new_code <= 0) {
 					mqtt_rolling_code = 1;
-				} else {
+				} else if (new_code > mqtt_rolling_code) {
 					mqtt_rolling_code = new_code;
+				} else if (new_code < mqtt_rolling_code) {
+					char number[10];
+					sprintf(number, "%u", mqtt_rolling_code);
+					esp_mqtt_client_publish(client, "/doorbell/roll", number, 0, 2, true);
 				}
 			}
 			break;

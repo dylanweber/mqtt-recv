@@ -40,8 +40,11 @@ void mqtt_rolling_timeout(void *);
 /// Number of connection attempts to the MQTT broker, -1 if not attempting to connect.
 int mqtt_retry_num;
 
-/// Whether connected or not to MQTT broker.
+/// Whether device connected or not to MQTT broker.
 bool mqtt_connected;
+
+/// Whether device connected once to MQTT broker.
+bool mqtt_connect_once;
 
 /// Rolling code used for confirming doorbell rings.
 unsigned int mqtt_rolling_code;

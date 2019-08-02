@@ -44,7 +44,10 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
 			break;
 		case SYSTEM_EVENT_STA_DISCONNECTED: {
 			ESP_LOGI(TAG, "Connection failed\n");
-			if (wifi_retry_num < CONFIG_ESP_MAXIMUM_RETRY && wifi_retry_num >= 0) {
+			if ((wifi_retry_num < CONFIG_ESP_MAXIMUM_RETRY && wifi_retry_num >= 0 &&
+				 !mqtt_connect_once) ||
+				(wifi_retry_num < 5 * CONFIG_ESP_MAXIMUM_RETRY && wifi_retry_num >= 0 &&
+				 mqtt_connect_once)) {
 				esp_wifi_connect();
 				xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT_4);
 				xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT_6);
