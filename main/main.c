@@ -42,4 +42,17 @@ void app_main() {
 		mqtt_routine(&mqtt_client);
 	}
 	ESP_LOGI(TAG, "Finished startup.");
+
+	// Task to send MQTT message must run on main task.
+	while (true) {
+		if (xSemaphoreTake(mqtt_semaphore, portMAX_DELAY) == pdTRUE) {
+			ESP_LOGI(TAG, "Sending MQTT message...");
+			char number[10];
+			sprintf(number, "%u", mqtt_rolling_code);
+			esp_mqtt_client_publish(mqtt_client, "/doorbell/roll", number, 0, 2, true);
+			vTaskDelay(400 / portTICK_PERIOD_MS);
+			xSemaphoreTake(mqtt_semaphore, 0);
+			vTaskDelay(4600 / portTICK_PERIOD_MS);
+		}
+	}
 }

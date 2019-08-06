@@ -37,7 +37,7 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t);
 /// Checks if rolling code exists on the broker.
 void mqtt_rolling_timeout(void *);
 /// Sends MQTT messages based on semaphore.
-void mqtt_semaphore_check(void *);
+// void mqtt_semaphore_check(void *);
 
 /// Number of connection attempts to the MQTT broker, -1 if not attempting to connect.
 int mqtt_retry_num;
