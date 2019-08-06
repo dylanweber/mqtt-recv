@@ -23,6 +23,7 @@ esp_err_t start_mqtt(char *mqtt_broker, uint16_t port, esp_mqtt_client_handle_t 
 	mqtt_connected = false;
 	mqtt_connect_once = false;
 	mqtt_rolling_code = 0;
+	mqtt_semaphore = xSemaphoreCreateBinary();
 
 	esp_mqtt_client_config_t mqtt_config = {.uri = NULL,
 											.event_handle = mqtt_event_handler,
@@ -87,6 +88,12 @@ esp_err_t start_mqtt(char *mqtt_broker, uint16_t port, esp_mqtt_client_handle_t 
 		esp_restart();
 	}
 	mqtt_retry_num = 0;
+
+	esp_mqtt_client_handle_t *client_ptr = malloc(sizeof(*client_ptr));
+	*client_ptr = client;
+	xTaskCreate(mqtt_semaphore_check, "mqtt_semaphore", 4096, client_ptr, tskIDLE_PRIORITY, NULL);
+	xTaskCreate(mqtt_rolling_timeout, "rolling_timeout", 4096, client_ptr, tskIDLE_PRIORITY, NULL);
+
 	return ESP_OK;
 }
 
@@ -104,8 +111,7 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
 				wifi_disconnect();
 				esp_restart();
 			}
-			xTaskCreate(mqtt_rolling_timeout, "rolling_timeout", 4096, &mqtt_client,
-						tskIDLE_PRIORITY, NULL);
+
 			break;
 		case MQTT_EVENT_DISCONNECTED:
 			mqtt_connected = false;
@@ -140,9 +146,10 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
 				} else if (new_code > mqtt_rolling_code) {
 					mqtt_rolling_code = new_code;
 				} else if (new_code < mqtt_rolling_code) {
-					char number[10];
-					sprintf(number, "%u", mqtt_rolling_code);
-					esp_mqtt_client_publish(client, "/doorbell/roll", number, 0, 2, true);
+					// char number[10];
+					// sprintf(number, "%u", mqtt_rolling_code);
+					// esp_mqtt_client_publish(client, "/doorbell/roll", number, 0, 2, true);
+					xSemaphoreGive(mqtt_semaphore);
 				}
 			}
 			break;
@@ -154,13 +161,29 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
 }
 
 void mqtt_rolling_timeout(void *params) {
-	esp_mqtt_client_handle_t client = (esp_mqtt_client_handle_t)params;
 	vTaskDelay(8000 / portTICK_PERIOD_MS);
 	if (mqtt_connected && mqtt_rolling_code == 0) {
 		ESP_LOGI(TAG, "Rolling code timout...");
-		char number[10];
-		sprintf(number, "%u", ++mqtt_rolling_code);
-		esp_mqtt_client_publish(client, "/doorbell/roll", number, 0, 2, true);
+		// char number[10];
+		// sprintf(number, "%u", ++mqtt_rolling_code);
+		// esp_mqtt_client_publish(client, "/doorbell/roll", number, 0, 2, true);
+		mqtt_rolling_code++;
+		xSemaphoreGive(mqtt_semaphore);
+	}
+	vTaskDelete(NULL);
+}
+
+void mqtt_semaphore_check(void *params) {
+	esp_mqtt_client_handle_t client = *(esp_mqtt_client_handle_t *)params;
+	while (true) {
+		if (xSemaphoreTake(mqtt_semaphore, portMAX_DELAY) == pdTRUE) {
+			char number[10];
+			sprintf(number, "%u", mqtt_rolling_code);
+			esp_mqtt_client_publish(client, "/doorbell/roll", number, 0, 2, true);
+			vTaskDelay(200 / portTICK_PERIOD_MS);
+			xSemaphoreTake(mqtt_semaphore, 0);
+			vTaskDelay(5000 / portTICK_PERIOD_MS);
+		}
 	}
 	vTaskDelete(NULL);
 }

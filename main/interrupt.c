@@ -58,11 +58,12 @@ void gpio_event_task(void *params) {
 				setup_routine();
 			} else if (button_int_info->button == EXT_NUM) {
 				if (*button_int_info->mqtt_handle != NULL && mqtt_rolling_code != 0) {
-					char number[10];
-					sprintf(number, "%u", ++mqtt_rolling_code);
-					esp_mqtt_client_publish(*button_int_info->mqtt_handle, "/doorbell/roll", number,
-											0, 2, true);
-					ESP_LOGI(TAG, "Publishing chime press: #%s", number);
+					// char number[10];
+					// sprintf(number, "%u", ++mqtt_rolling_code);
+					// esp_mqtt_client_publish(client, "/doorbell/roll", number, 0, 2, true);
+					mqtt_rolling_code++;
+					xSemaphoreGive(mqtt_semaphore);
+					ESP_LOGI(TAG, "Publishing chime press: #%d", mqtt_rolling_code);
 				}
 				ESP_LOGI(TAG, "Doorbell chime.");
 			}
