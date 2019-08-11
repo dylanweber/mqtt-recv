@@ -63,6 +63,9 @@ esp_err_t wifi_scan(char ***);
 /// Frees the network list returned from wifi_scan(char ***).
 void free_scan(void *);
 
+/// Resets retry number after a certain number of times.
+void reset_reconn_num(void *);
+
 /// Number of connection attempts to a wifi network, -1 if not attempting or broadcasting AP.
 int wifi_retry_num;
 

@@ -21,7 +21,6 @@ static const char *TAG = "mqtt";
 esp_err_t start_mqtt(char *mqtt_broker, uint16_t port, esp_mqtt_client_handle_t *ret_client) {
 	mqtt_retry_num = -1;
 	mqtt_connected = false;
-	mqtt_connect_once = false;
 	mqtt_rolling_code = 0;
 	mqtt_semaphore = xSemaphoreCreateBinary();
 
@@ -103,7 +102,6 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
 	switch (event->event_id) {
 		case MQTT_EVENT_CONNECTED:
 			mqtt_connected = true;
-			mqtt_connect_once = true;
 			ESP_LOGI(TAG, "Connected to MQTT broker.");
 			esp_mqtt_client_subscribe(client, "/doorbell/roll", 2);
 			ESP_LOGI(TAG, "new config: %d", wifi_new_config);
@@ -118,8 +116,7 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
 			mqtt_connected = false;
 			ESP_LOGI(TAG, "Disconnected from MQTT broker.");
 			mqtt_retry_num++;
-			if ((mqtt_retry_num > CONFIG_ESP_MAXIMUM_RETRY && !mqtt_connect_once) ||
-				(mqtt_retry_num > 5 * CONFIG_ESP_MAXIMUM_RETRY && mqtt_connect_once)) {
+			if (mqtt_retry_num > CONFIG_ESP_MAXIMUM_RETRY) {
 				ESP_LOGI(TAG, "Restarting WiFi configuration for MQTT broker...");
 				wifi_disconnect();
 				if (wifi_new_config) {
@@ -128,7 +125,6 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
 					remove("/spiffs/wifi.bssid");
 				}
 				esp_restart();
-				wifi_restore();
 			} else if (mqtt_retry_num >= 0) {
 				ESP_LOGI(TAG, "Reconnecting to MQTT broker...");
 			}
@@ -171,21 +167,5 @@ void mqtt_rolling_timeout(void *params) {
 		mqtt_rolling_code++;
 		xSemaphoreGive(mqtt_semaphore);
 	}
-	vTaskDelete(NULL);
-}
-
-void mqtt_semaphore_check(void *params) {
-	// esp_mqtt_client_handle_t client = *(esp_mqtt_client_handle_t *)params;
-	// while (true) {
-	// 	if (xSemaphoreTake(mqtt_semaphore, portMAX_DELAY) == pdTRUE) {
-	// 		ESP_LOGI(TAG, "Sending MQTT message...");
-	// 		char number[10];
-	// 		sprintf(number, "%u", mqtt_rolling_code);
-	// 		esp_mqtt_client_publish(client, "/doorbell/roll", number, 0, 2, true);
-	// 		vTaskDelay(200 / portTICK_PERIOD_MS);
-	// 		xSemaphoreTake(mqtt_semaphore, 0);
-	// 		vTaskDelay(5000 / portTICK_PERIOD_MS);
-	// 	}
-	// }
 	vTaskDelete(NULL);
 }

@@ -44,10 +44,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
 			break;
 		case SYSTEM_EVENT_STA_DISCONNECTED: {
 			ESP_LOGI(TAG, "Connection failed\n");
-			if ((wifi_retry_num < CONFIG_ESP_MAXIMUM_RETRY && wifi_retry_num >= 0 &&
-				 !mqtt_connect_once) ||
-				(wifi_retry_num < 5 * CONFIG_ESP_MAXIMUM_RETRY && wifi_retry_num >= 0 &&
-				 mqtt_connect_once)) {
+			if (wifi_retry_num < CONFIG_ESP_MAXIMUM_RETRY && wifi_retry_num >= 0) {
 				esp_wifi_connect();
 				xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT_4);
 				xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT_6);
@@ -165,6 +162,9 @@ esp_err_t wifi_connect(char *ssid, char *pass, uint8_t *bssid) {
 	ESP_LOGI(TAG, "WIFI init finished.");
 	ESP_LOGI(TAG, "Connecting to AP SSID: \"%s\" password:\"%s\"", wifi_config.sta.ssid,
 			 wifi_config.sta.password);
+
+	xTaskCreate(reset_reconn_num, "reset_reconn_num", 4096, NULL, tskIDLE_PRIORITY, NULL);
+
 	return ESP_OK;
 }
 
@@ -289,4 +289,16 @@ void free_scan(void *data) {
 		free(network_list[i]);
 	}
 	free(network_list);
+}
+
+void reset_reconn_num(void *params) {
+	while (true) {
+		vTaskDelay(18000000 / portTICK_PERIOD_MS);  // delay 5 hours
+		if (wifi_retry_num >= 0 && wifi_retry_num <= CONFIG_ESP_MAXIMUM_RETRY / 2 + 1) {
+			wifi_retry_num = 0;
+		}
+		if (mqtt_retry_num >= 0 && mqtt_retry_num <= CONFIG_ESP_MAXIMUM_RETRY / 2 + 1) {
+			mqtt_retry_num = 0;
+		}
+	}
 }
