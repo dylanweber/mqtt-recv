@@ -54,6 +54,7 @@ void gpio_event_task(void *params) {
 				remove("/spiffs/wifi.ssid");
 				remove("/spiffs/wifi.pass");
 				remove("/spiffs/wifi.bssid");
+				remove("/spiffs/mqtt_roll.dat");
 				wifi_disconnect();
 				setup_routine();
 			} else if (button_int_info->button == EXT_NUM) {

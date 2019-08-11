@@ -155,3 +155,26 @@ void setup_routine() {
 		start_httpserver(network_list);
 	}
 }
+
+void save_recovery() {
+	FILE *fp = fopen("/spiffs/mqtt_roll.dat", "w");
+	if (fp == NULL) {
+		ESP_LOGE(TAG, "Failed to open mqtt file.");
+		return;
+	}
+
+	fwrite(&mqtt_rolling_code, sizeof(mqtt_rolling_code), 1, fp);
+	fclose(fp);
+}
+
+void attempt_recovery() {
+	FILE *fp = fopen("/spiffs/mqtt_roll.dat", "r");
+	if (fp == NULL) {
+		ESP_LOGI(TAG, "Data mqtt file not found.");
+		return;
+	}
+
+	fread(&mqtt_rolling_code, sizeof(mqtt_rolling_code), 1, fp);
+	fclose(fp);
+	remove("/spiffs/mqtt_roll.dat");
+}

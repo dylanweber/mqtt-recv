@@ -64,6 +64,10 @@ void setup_status_led();
 void mqtt_routine(esp_mqtt_client_handle_t *);
 /// Starts setup server.
 void setup_routine();
+/// Saves the MQTT rolling code for restart.
+void save_recovery();
+/// Retrieves the MQTT rolling code previously saved.
+void attempt_recovery();
 
 /// GPIO event queue used for storing GPIO interrupt information
 QueueHandle_t gpio_event_queue;

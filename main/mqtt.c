@@ -24,6 +24,8 @@ esp_err_t start_mqtt(char *mqtt_broker, uint16_t port, esp_mqtt_client_handle_t 
 	mqtt_rolling_code = 0;
 	mqtt_semaphore = xSemaphoreCreateBinary();
 
+	attempt_recovery();
+
 	esp_mqtt_client_config_t mqtt_config = {.uri = NULL,
 											.event_handle = mqtt_event_handler,
 											.port = port,
@@ -124,6 +126,7 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
 					remove("/spiffs/wifi.pass");
 					remove("/spiffs/wifi.bssid");
 				}
+				save_recovery();
 				esp_restart();
 			} else if (mqtt_retry_num >= 0) {
 				ESP_LOGI(TAG, "Reconnecting to MQTT broker...");
