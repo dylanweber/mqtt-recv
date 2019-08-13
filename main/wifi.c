@@ -294,7 +294,7 @@ void free_scan(void *data) {
 
 void reset_reconn_num(void *params) {
 	while (true) {
-		vTaskDelay(18000000 / portTICK_PERIOD_MS);  // delay 5 hours
+		vTaskDelay(1200000 / portTICK_PERIOD_MS);  // delay 20 mins
 		if (wifi_retry_num >= 0 && wifi_retry_num <= CONFIG_ESP_MAXIMUM_RETRY / 2 + 1) {
 			wifi_retry_num = 0;
 		}

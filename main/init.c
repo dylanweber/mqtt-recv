@@ -177,4 +177,5 @@ void attempt_recovery() {
 	fread(&mqtt_rolling_code, sizeof(mqtt_rolling_code), 1, fp);
 	fclose(fp);
 	remove("/spiffs/mqtt_roll.dat");
+	ESP_LOGI(TAG, "Recovered rolling code: %d", mqtt_rolling_code);
 }
