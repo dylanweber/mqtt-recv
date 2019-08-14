@@ -38,6 +38,7 @@ void app_main() {
 	esp_err_t conn_ret = wifi_restore();
 	if (conn_ret != ESP_OK) {
 		setup_routine();
+		return;
 	} else {
 		mqtt_routine(&mqtt_client);
 	}
