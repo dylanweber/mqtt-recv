@@ -60,8 +60,10 @@ esp_err_t app_init() {
 	tcpip_adapter_init();
 	wifi_new_config = false;
 	gpio_event_queue = NULL;
+	button_semaphore = xSemaphoreCreateBinary();
 
 	xTaskCreate(setup_status_led, "status_led", 4096, NULL, tskIDLE_PRIORITY, NULL);
+	xTaskCreate(debounce_and_retrieve, "debounce_and_retrieve", 4096, NULL, tskIDLE_PRIORITY, NULL);
 	return ESP_OK;
 }
 
@@ -93,9 +95,9 @@ void configure_clear_interrupt(esp_mqtt_client_handle_t *mqtt_client) {
 
 void configure_ext_interrupt(esp_mqtt_client_handle_t *mqtt_client) {
 	gpio_config_t io_config;
-	io_config.intr_type = GPIO_INTR_POSEDGE;
+	io_config.intr_type = GPIO_INTR_ANYEDGE;
 	io_config.mode = GPIO_MODE_INPUT;
-	io_config.pull_up_en = GPIO_PULLUP_DISABLE;
+	io_config.pull_up_en = GPIO_PULLUP_ENABLE;
 	io_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
 	io_config.pin_bit_mask = EXT_MSK;
 

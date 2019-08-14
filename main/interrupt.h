@@ -29,5 +29,10 @@
 void IRAM_ATTR gpio_isr_handler(void *);
 /// GPIO event task that waits for queue events and handles them
 void gpio_event_task(void *);
+/// Button debounce and release logic.
+void debounce_and_retrieve(void *);
+
+/// Semaphore for sending chime interrupts.
+SemaphoreHandle_t button_semaphore;
 
 #endif  // INTERRUPT_H

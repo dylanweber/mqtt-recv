@@ -62,14 +62,27 @@ void gpio_event_task(void *params) {
 					// char number[10];
 					// sprintf(number, "%u", ++mqtt_rolling_code);
 					// esp_mqtt_client_publish(client, "/doorbell/roll", number, 0, 2, true);
-					mqtt_rolling_code++;
-					xSemaphoreGive(mqtt_semaphore);
-					ESP_LOGI(TAG, "Publishing chime press: #%d", mqtt_rolling_code);
+					xSemaphoreGive(button_semaphore);
+					ESP_LOGI(TAG, "Registering chime press: #%d", mqtt_rolling_code);
 				}
 				ESP_LOGI(TAG, "Doorbell chime.");
 			}
 		} else {
 			ESP_LOGI(TAG, "No interrupt.");
+		}
+	}
+}
+
+void debounce_and_retrieve(void *params) {
+	while (true) {
+		if (xSemaphoreTake(button_semaphore, portMAX_DELAY)) {
+			vTaskDelay(2500 / portTICK_PERIOD_MS);
+			xSemaphoreTake(button_semaphore, 0);
+			if (xSemaphoreTake(button_semaphore, 2500 / portTICK_PERIOD_MS)) {
+				mqtt_rolling_code++;
+				xSemaphoreGive(mqtt_semaphore);
+				ESP_LOGI(TAG, "Publishing chime press: #%d", mqtt_rolling_code);
+			}
 		}
 	}
 }
